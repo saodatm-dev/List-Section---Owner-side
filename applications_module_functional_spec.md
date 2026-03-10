@@ -363,17 +363,16 @@ graph LR
 
 ---
 
-## 7. Open Questions
+## 7. Resolved Decisions
 
-The following items require product/business decisions before final implementation:
+The following items were originally open questions. They have been resolved with the decisions documented below.
 
-| # | Question | Impact |
-|---|----------|--------|
-| 1 | **Should the CRM stage and List View status be linked?** For example, should moving a CRM stage to "Rejected" also set the List View status to "Rejected"? | Data consistency, UX expectations |
-| 2 | **Can an Owner undo a Reject decision?** The current spec makes Rejected final. Should there be an appeal or reopen mechanism? | Status model, Tenant experience |
-| 3 | **What happens after Accept?** Does accepting an application trigger a contract creation flow, a message to the tenant, or another module's action? | Cross-module integration |
-| 4 | **Is there a notification system?** How are Tenants notified when their application status changes (push, email, in-app)? | Notification infrastructure |
-| 5 | **What is the difference between Tenant "Sent" and "Unread" statuses?** Both represent pre-Owner-engagement states. Is "Sent" purely a frontend state before delivery, or does it persist in the backend? | API design, status model |
-| 6 | **Can Owners archive old applications?** Is there a retention period or cleanup logic for applications in final statuses? | Data management, UI performance |
-| 7 | **Is the CRM stage "Rejected" the same as the List View "Rejected"?** They use the same word but are independent fields. Should rejecting in CRM also reject in List View? | Consistency, business logic |
-
+| # | Question | Decision |
+|---|----------|----------|
+| 1 | **Should the CRM stage and List View status be linked?** | **No — keep them independent.** They serve different purposes: List View is for quick triage (accept/reject), CRM is for relationship management. Linking them would create confusing side effects. This aligns with the independent status/stage design in §3.1. |
+| 2 | **Can an Owner undo a Reject decision?** | **No — Rejected remains final.** If the Owner made a mistake, the Tenant can re-apply (allowed per §6.1). Adding an undo mechanism creates confusing status reversals for the Tenant. The re-application path is cleaner. |
+| 3 | **What happens after Accept?** | **Status changes to `accepted` — no automatic follow-up.** The Owner uses CRM tabs (Messages, Viewings) to coordinate next steps manually. Contract creation and automated follow-ups can be added as a separate module later. |
+| 4 | **Is there a notification system?** | **Yes — in-app notifications at minimum.** Tenants receive in-app notifications when their application status changes (Read, Accepted, Rejected). Push and email notifications can be added later. |
+| 5 | **What is the difference between Tenant "Sent" and "Unread"?** | **"Sent" is a brief transitional state.** `sent` = application submitted but not yet delivered/processed. `unread` = delivered to the Owner's dashboard but not yet opened. The `sent` → `unread` transition is near-instant (backend processing). |
+| 6 | **Can Owners archive old applications?** | **Not for MVP.** Applications in final statuses remain in their groups. Filtering by listing is sufficient for managing volume. Archiving can be revisited if performance becomes an issue. |
+| 7 | **Is the CRM "Rejected" the same as List View "Rejected"?** | **No — they are independent.** CRM "Rejected" means the deal pipeline ended. List View "Rejected" means the Owner declined the application. They may coincide in practice but are not forced to sync. Same principle as Decision #1. |
