@@ -248,7 +248,7 @@ Available in the side panel when clicking a CRM card:
 
 | Property | Details |
 |----------|---------|
-| **Purpose** | Triage and quick decision-making on incoming applications |
+| **Purpose** | Quick decision-making on incoming applications |
 | **Layout** | Vertical status board with collapsible groups: New → Under Review → Accepted → Rejected |
 | **Data Source** | Application **status** field |
 | **Key interactions** | Click card → Modal with Accept/Reject buttons; Drag-and-drop between status groups |
