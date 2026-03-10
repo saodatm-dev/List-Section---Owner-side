@@ -358,8 +358,8 @@ graph LR
 | Scenario | Behavior |
 |----------|----------|
 | No applications match active filter | Message: "No applications matching selected filters" |
-| Status group is empty (List View, **no filter** active) | Group still shown with header and count = 0. **Rationale:** the Owner sees the full pipeline structure at all times, so they know where cards can be dragged to. |
-| Status group is empty (List View, **filter active**) | Group is **hidden entirely**. **Rationale:** when filtering, the Owner is focused on a specific data subset — empty groups add visual noise and are removed to keep the view clean. |
+| Status group is empty (List View, **no filter** active) | Group still shown with header and count = 0. **Why:** the Owner sees the full pipeline structure at all times, so they know where cards can be dragged to. |
+| Status group is empty (List View, **filter active**) | Group is **hidden entirely**. **Why:** when filtering, the Owner is focused on a specific data subset — empty groups add visual noise and are removed to keep the view clean. |
 
 ---
 
