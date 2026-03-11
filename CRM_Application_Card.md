@@ -424,7 +424,7 @@ When there are no viewings: centered message **"Нет просмотров"** (
 
 | Rule | Description |
 |------|-------------|
-| **Rejection Stage Dropdown** | Only visible when `stage === 'rejected'`; records the pipeline stage where the deal was lost. |
+| **Rejection Stage Dropdown** | Only visible when `stage === 'rejected'`; **mandatory** — the Owner must select the pipeline stage where the deal was lost before adding a rejection note. |
 | **Placeholder change** | The note textarea placeholder changes to "Причина отказа..." in the Rejected stage. |
 | **Analytics integration** | Rejection notes and stage data feed into the Analytics tab's bottleneck analysis and recommendation engine. |
 
@@ -457,5 +457,5 @@ The following items were discussed during the design process and resolved with t
 | 1 | **Should CRM stages have transition restrictions like List View?** | **No — keep them unrestricted.** CRM is a flexible relationship management tool; hard restrictions reduce utility. The Owner should be able to move deals freely to match real-world deal flow. |
 | 2 | **Should editing a note preserve the original timestamp?** | **No — current implementation replaces it.** Edit is implemented as delete + pre-fill + re-add. Timestamp preservation can be revisited if users find it confusing. |
 | 3 | **Should viewing status auto-transition from "Upcoming" to "Done"?** | **Not for MVP.** Auto-transition requires backend scheduling logic. Manual status management or backend cron job can be added later. |
-| 4 | **Should the Rejection Stage dropdown be mandatory?** | **No — it's optional.** The Owner can add a rejection note without selecting a stage. Making it required would add friction to a simple workflow. |
+| 4 | **Should the Rejection Stage dropdown be mandatory?** | **Yes — it is mandatory.** The Owner must select the pipeline stage where the rejection occurred before adding a rejection note. This ensures accurate analytics on bottlenecks and conversion drop-off points. |
 | 5 | **Are suggested note chips customizable by the Owner?** | **Not for MVP.** Chips are hardcoded per stage. User-defined templates can be added as a future feature. |
