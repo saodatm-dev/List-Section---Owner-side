@@ -39,7 +39,7 @@ The **CRM Application Card** is the workspace for managing rental applications w
 
 There are **no transition restrictions** — any stage can move to any other stage. Every stage change:
 1. Updates the `stage` field
-2. Creates a history entry: `"Стадия: {old} -> {new}"`
+2. Creates a history entry: `"Стадия: {new}"`
 3. Re-renders the board and Detail Panel
 
 ---
@@ -139,7 +139,7 @@ A vertical timeline showing events in **reverse chronological order** (newest fi
 
 **Events logged:**
 - `"Новая заявка создана"` — on creation
-- `"Стадия: {old} -> {new}"` — on stage change
+- `"Стадия: {new}"` — on stage change
 - `"Добавлена заметка"` — on note add
 - `"Просмотр назначен на {DD.MM} в {HH:MM}"` — on viewing scheduled
 
