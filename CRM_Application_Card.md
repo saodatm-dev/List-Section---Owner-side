@@ -220,31 +220,7 @@ Each viewing displays: **date** (day + abbreviated month) · **time** · **addre
 
 ---
 
-## 9. Data Model
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | number | Unique identifier |
-| `initials` | string | 2-char initials for avatar |
-| `bg` | string | Avatar background |
-| `color` | string | Avatar text style |
-| `name` | string | Full tenant name |
-| `verified` | boolean | Identity verification status |
-| `entity` | string | "Физическое лицо" / "Юридическое лицо" |
-| `listing` | string | Property name |
-| `thumb` | string | Thumbnail URL |
-| `time` | string | Relative time label |
-| `msg` | boolean | Has messages |
-| `status` | string | List View: `unread`, `read`, `accepted`, `rejected` |
-| `stage` | string | CRM: `new`, `contact`, `viewing`, `contract`, `rejected` |
-| `notes` | array | `{ text, time }` |
-| `viewings` | array | `{ date, time, addr, status }` |
-| `history` | array | `{ time, text, color }` |
-| `messages` | array | `{ from, name, text, time, date }` |
-
----
-
-## 10. Edge Cases
+## 9. Edge Cases
 
 | Area | Rule |
 |------|------|
@@ -255,7 +231,7 @@ Each viewing displays: **date** (day + abbreviated month) · **time** · **addre
 
 ---
 
-## 11. Resolved Decisions
+## 10. Resolved Decisions
 
 | # | Question | Decision |
 |---|----------|----------|
