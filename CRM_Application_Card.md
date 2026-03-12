@@ -122,8 +122,6 @@ Read-only summary with three sections:
 
 ### ИНФОРМАЦИЯ (Metadata)
 
-A **2×2 grid**:
-
 | Тип | Стадия |
 |-----|--------|
 | Entity type | Current CRM stage |
