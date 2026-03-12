@@ -193,7 +193,7 @@ Visible only when `stage === 'rejected'`. Records which pipeline stage the rejec
 | Element | Description |
 |---------|-------------|
 | **Title** | "Назначить просмотр" |
-| **Inputs** | Date picker + Time picker (side-by-side) + Address (pre-populated with listing name) |
+| **Inputs** | Date picker + Time picker (side-by-side) |
 | **Submit** | "Назначить" — all fields required; empty fields silently block submission |
 
 On submit: viewing created with `status: "upcoming"`, history entry logged, board + panel re-render.
@@ -212,7 +212,7 @@ Each viewing displays: **date** (day + abbreviated month) · **time** · **addre
 | **Проведен** (Done) | `done` | Completed |
 
 > [!NOTE]
-> All viewings are created as `upcoming`. Auto-transition to `done` is not implemented — requires backend logic.
+> All viewings are created as `upcoming`. The user manually transitions a viewing to `done`.
 
 **Empty state:** "Нет просмотров" (centered).
 
