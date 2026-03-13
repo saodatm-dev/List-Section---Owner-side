@@ -1,0 +1,1867 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maydon — Заявки (Owner Side)</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --brand: #ef5a28;
+        --brand-hover: #d94e1f;
+        --brand-light: #fff0eb;
+        --dark: #1a1a1a;
+        --gray-900: #2d2d2d;
+        --gray-700: #555;
+        --gray-500: #888;
+        --gray-400: #aaa;
+        --gray-300: #d1d1d1;
+        --gray-200: #e8e8e8;
+        --gray-100: #f5f5f5;
+        --white: #ffffff;
+        --green: #27ae60;
+        --red: #e74c3c;
+        --yellow: #f2994a;
+        --blue: #2f80ed;
+        --radius: 12px;
+        --radius-sm: 8px;
+        --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background: #fafafa;
+        color: var(--dark);
+        min-height: 100vh;
+        display: flex;
+      }
+      .hidden { display: none !important; }
+
+      /* ── Sidebar ── */
+      .sidebar {
+        width: 220px;
+        background: var(--white);
+        border-right: 1px solid var(--gray-200);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 10;
+      }
+      .sidebar-logo {
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 18px;
+        color: var(--brand);
+      }
+      .sidebar-logo svg {
+        width: 32px;
+        height: 32px;
+      }
+      .sidebar nav {
+        flex: 1;
+        padding: 8px 12px;
+      }
+      .sidebar nav a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-radius: var(--radius-sm);
+        color: var(--gray-700);
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+        margin-bottom: 2px;
+      }
+      .sidebar nav a:hover {
+        background: var(--gray-100);
+        color: var(--dark);
+      }
+      .sidebar nav a.active {
+        background: var(--brand-light);
+        color: var(--brand);
+        font-weight: 600;
+      }
+      .sidebar nav a .icon {
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .sidebar nav a .badge {
+        margin-left: auto;
+        background: var(--brand);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 10px;
+      }
+
+      /* ── Main ── */
+      .main {
+        margin-left: 220px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      /* Top bar */
+      .topbar {
+        height: 60px;
+        background: var(--white);
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        align-items: center;
+        padding: 0 32px;
+        gap: 16px;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+      .search-box {
+        flex: 1;
+        max-width: 480px;
+        margin: 0 auto;
+        position: relative;
+      }
+      .search-box input {
+        width: 100%;
+        padding: 8px 16px 8px 40px;
+        border: 1px solid var(--gray-200);
+        border-radius: 20px;
+        font-size: 14px;
+        background: var(--gray-100);
+        outline: none;
+        transition: border 0.2s;
+      }
+      .search-box input:focus {
+        border-color: var(--brand);
+        background: #fff;
+      }
+      .search-box svg {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gray-400);
+      }
+      .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .topbar-right .notif {
+        position: relative;
+        cursor: pointer;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gray-100);
+        transition: background 0.2s;
+      }
+      .topbar-right .notif:hover {
+        background: var(--gray-200);
+      }
+      .topbar-right .notif .dot {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 8px;
+        height: 8px;
+        background: var(--brand);
+        border-radius: 50%;
+        border: 2px solid #fff;
+      }
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--gray-200);
+        overflow: hidden;
+        cursor: pointer;
+      }
+      .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .user-name {
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      /* ── Page Content ── */
+      .page {
+        padding: 28px 32px;
+        flex: 1;
+      }
+      .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+      }
+      .page-header h1 {
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .filter-dropdowns {
+        display: flex;
+        gap: 12px;
+      }
+      /* Sub-nav tabs */
+      .sub-nav{display:flex;gap:0;border-bottom:2px solid var(--gray-200);margin-bottom:20px;margin-top:16px;}
+      .sub-nav a{padding:10px 20px;font-size:14px;font-weight:500;color:var(--gray-500);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;}
+      .sub-nav a:hover{color:var(--dark);}
+      .sub-nav a.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600;}
+      .filter-select-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .filter-select-wrap select {
+        padding: 7px 32px 7px 14px;
+        border-radius: 20px;
+        border: 1px solid var(--gray-200);
+        background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--gray-700);
+        cursor: pointer;
+        transition: all 0.2s;
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+        min-width: 160px;
+        font-family: inherit;
+      }
+      .filter-select-wrap select:hover {
+        border-color: var(--brand);
+      }
+      .filter-select-wrap select:focus {
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px rgba(239, 90, 40, 0.1);
+      }
+
+      /* ── Request List ── */
+      .request-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .request-card {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .request-card:hover {
+        border-color: var(--brand);
+        box-shadow: var(--shadow);
+      }
+      .request-card .rc-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--gray-100);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 16px;
+        color: var(--brand);
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+      .request-card .rc-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .request-card .rc-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .request-card .rc-name {
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .request-card .rc-sub {
+        font-size: 12px;
+        color: var(--gray-500);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .request-card .rc-listing {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+      .request-card .rc-listing img {
+        width: 48px;
+        height: 36px;
+        border-radius: 6px;
+        object-fit: cover;
+      }
+      .request-card .rc-listing span {
+        font-size: 13px;
+        color: var(--gray-700);
+        font-weight: 500;
+      }
+      .request-card .rc-time {
+        font-size: 12px;
+        color: var(--gray-400);
+        flex-shrink: 0;
+        min-width: 80px;
+        text-align: right;
+      }
+      .request-card .rc-status {
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 11px;
+        font-weight: 600;
+        flex-shrink: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+      .rc-status.new {
+        background: #fff8e1;
+        color: var(--yellow);
+      }
+      .rc-status.contact {
+        background: #e3f2fd;
+        color: var(--blue);
+      }
+      .rc-status.viewing {
+        background: #f3e5f5;
+        color: #9B59B6;
+      }
+      .rc-status.negotiation {
+        background: #e0f7fa;
+        color: #17A2B8;
+      }
+      .rc-status.contract {
+        background: #e8f5e9;
+        color: var(--green);
+      }
+      .rc-status.rejected {
+        background: #feecec;
+        color: var(--red);
+      }
+
+      /* ── Modal Overlay ── */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+      }
+      .modal-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .modal-card {
+        background: var(--white);
+        border-radius: 16px;
+        width: 460px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: var(--shadow-lg);
+        transform: translateY(20px) scale(0.97);
+        transition: transform 0.25s;
+        position: relative;
+      }
+      .modal-overlay.open .modal-card {
+        transform: translateY(0) scale(1);
+      }
+      .modal-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: var(--gray-100);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+        z-index: 2;
+      }
+      .modal-close:hover {
+        background: var(--gray-200);
+      }
+
+      /* Modal Header */
+      .modal-header {
+        padding: 24px 24px 0;
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+      }
+      .modal-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: var(--gray-100);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 20px;
+        color: var(--brand);
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+      .modal-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .modal-header-info {
+        flex: 1;
+      }
+      .modal-header-info .name-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .modal-header-info .name-row h2 {
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .modal-header-info .entity-type {
+        font-size: 13px;
+        color: var(--gray-500);
+        margin-top: 4px;
+      }
+
+      /* Modal Meta */
+      .modal-meta {
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border-bottom: 1px solid var(--gray-200);
+      }
+      .modal-meta .listing-thumb {
+        width: 64px;
+        height: 48px;
+        border-radius: var(--radius-sm);
+        object-fit: cover;
+        flex-shrink: 0;
+      }
+      .modal-meta .listing-info {
+        flex: 1;
+      }
+      .modal-meta .listing-info .listing-name {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .modal-meta .listing-info .time-ago {
+        font-size: 12px;
+        color: var(--gray-500);
+        margin-top: 2px;
+      }
+
+      /* Modal Message */
+      .modal-message {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--gray-200);
+      }
+      .modal-message .msg-label {
+        font-size: 12px;
+        color: var(--gray-500);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .modal-message .msg-label .notif-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--brand);
+        border-radius: 50%;
+      }
+      .modal-message .msg-bubble {
+        background: var(--gray-100);
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 13px;
+        color: var(--gray-700);
+        line-height: 1.5;
+        position: relative;
+      }
+      .modal-message .msg-respond {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .modal-message .msg-respond button {
+        padding: 8px 20px;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+      }
+      .btn-respond {
+        background: var(--dark);
+        color: #fff;
+      }
+      .btn-respond:hover {
+        background: var(--gray-900);
+      }
+      .btn-skip {
+        background: var(--gray-100);
+        color: var(--gray-700);
+        border: 1px solid var(--gray-300) !important;
+      }
+      .btn-skip:hover {
+        background: var(--gray-200);
+      }
+
+      /* Modal Actions */
+      .modal-actions {
+        padding: 20px 24px;
+        display: flex;
+        gap: 10px;
+      }
+      .modal-actions button {
+        flex: 1;
+        padding: 12px;
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+      }
+      .btn-accept {
+        background: var(--dark);
+        color: #fff;
+      }
+      .btn-accept:hover {
+        background: var(--gray-900);
+      }
+      .btn-reject {
+        background: var(--white);
+        color: var(--gray-700);
+        border: 1.5px solid var(--gray-300) !important;
+      }
+      .btn-reject:hover {
+        border-color: var(--red) !important;
+        color: var(--red);
+        background: #fff5f5;
+      }
+
+      /* ── Footer ── */
+      .footer {
+        padding: 12px 32px;
+        font-size: 12px;
+        color: var(--gray-400);
+        border-top: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+      }
+
+      /* ══ CRM Pipeline ══ */
+      .pipeline{display:flex;gap:14px;flex:1;overflow-x:auto;padding-bottom:8px;min-height:0;}
+      .pipe-col{flex:1;min-width:220px;max-width:280px;display:flex;flex-direction:column;background:var(--gray-100);border-radius:14px;overflow:hidden;}
+      .pipe-col-header{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;}
+      .pipe-col-title{display:flex;align-items:center;gap:8px;}
+      .pipe-col-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+      .pipe-col-title span{font-size:13px;font-weight:600;color:var(--dark);}
+      .pipe-col-count{background:var(--white);border:1px solid var(--gray-200);color:var(--gray-500);font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;}
+      .pipe-col-body{flex:1;padding:0 8px 12px;display:flex;flex-direction:column;gap:8px;min-height:80px;overflow-y:auto;transition:background .2s;}
+      .pipe-col-body.drag-over{background:rgba(239,90,40,0.05);}
+      .pipe-card{background:var(--white);border:1.5px solid var(--gray-200);border-radius:10px;padding:12px 14px;cursor:grab;transition:all .2s;}
+      .pipe-card:active{cursor:grabbing;}
+      .pipe-card:hover{border-color:var(--brand);box-shadow:var(--shadow);transform:translateY(-1px);}
+      .pipe-card.dragging{opacity:0.4;transform:scale(0.97);}
+      .pc-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+      .pc-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;}
+      .pc-name{font-size:12px;font-weight:600;line-height:1.2;}
+      .pc-entity{font-size:10px;color:var(--gray-500);margin-top:1px;}
+      .pc-listing{display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--gray-100);border-radius:6px;margin-bottom:6px;}
+      .pc-listing img{width:34px;height:26px;border-radius:4px;object-fit:cover;flex-shrink:0;}
+      .pc-listing span{font-size:11px;font-weight:500;color:var(--gray-700);}
+      .pc-footer{display:flex;align-items:center;justify-content:space-between;}
+      .pc-time{font-size:10px;color:var(--gray-400);}
+      .pc-msg{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--brand);font-weight:600;}
+      .pc-view-badge{font-size:10px;font-weight:600;padding:3px 10px;border-radius:10px;text-align:center;margin-bottom:2px;}
+      .pc-view-badge.upcoming{background:#e3f2fd;color:var(--blue);}
+      .pc-view-badge.done{background:#e8f5e9;color:var(--green);}
+
+      /* ══ Detail Panel ══ */
+      .detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:50;opacity:0;pointer-events:none;transition:opacity .25s;}
+      .detail-overlay.open{opacity:1;pointer-events:all;}
+      .detail-panel{position:fixed;top:0;right:-520px;bottom:0;width:520px;background:var(--white);box-shadow:-4px 0 32px rgba(0,0,0,0.1);z-index:51;display:flex;flex-direction:column;transition:right .3s cubic-bezier(.4,0,.2,1);}
+      .detail-panel.open{right:0;}
+      .dp-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;border:none;background:var(--gray-100);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;transition:background .2s;}
+      .dp-close:hover{background:var(--gray-200);}
+      .dp-header{padding:24px 28px 16px;border-bottom:1px solid var(--gray-200);}
+      .dp-user{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+      .dp-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0;}
+      .dp-name{font-size:18px;font-weight:700;}
+      .dp-entity-type{font-size:13px;color:var(--gray-500);margin-top:2px;}
+      .dp-stage-row{display:flex;align-items:center;gap:10px;}
+      .dp-stage-label{font-size:12px;color:var(--gray-500);font-weight:500;}
+      .dp-stage-select{padding:5px 28px 5px 12px;border-radius:16px;border:1px solid var(--gray-200);font-size:12px;font-weight:600;appearance:none;-webkit-appearance:none;background:#fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center;cursor:pointer;font-family:inherit;outline:none;transition:border .2s;}
+      .dp-stage-select:focus{border-color:var(--brand);}
+      .dp-tabs{display:flex;border-bottom:1px solid var(--gray-200);padding:0 28px;}
+      .dp-tabs button{padding:10px 16px;font-size:13px;font-weight:500;color:var(--gray-500);background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:all .2s;font-family:inherit;}
+      .dp-tabs button:hover{color:var(--dark);}
+      .dp-tabs button.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600;}
+      .dp-body{flex:1;overflow-y:auto;padding:20px 28px;}
+      .ov-section{margin-bottom:20px;}
+      .ov-section-title{font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+      .ov-listing{display:flex;gap:12px;align-items:center;padding:12px;background:var(--gray-100);border-radius:10px;}
+      .ov-listing img{width:64px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;}
+      .ov-listing-name{font-size:14px;font-weight:600;}
+      .ov-listing-sub{font-size:12px;color:var(--gray-500);margin-top:2px;}
+      .ov-meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+      .ov-meta-item{padding:12px;background:var(--gray-100);border-radius:10px;}
+      .ov-meta-label{font-size:11px;color:var(--gray-400);font-weight:500;margin-bottom:4px;}
+      .ov-meta-value{font-size:14px;font-weight:600;}
+      .history-list{position:relative;padding-left:20px;}
+      .history-list::before{content:'';position:absolute;left:5px;top:8px;bottom:8px;width:2px;background:var(--gray-200);}
+      .history-item{position:relative;padding-bottom:18px;}
+      .history-item:last-child{padding-bottom:0;}
+      .history-dot{position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--white);z-index:1;}
+      .history-time{font-size:10px;color:var(--gray-400);margin-bottom:3px;}
+      .history-text{font-size:13px;color:var(--gray-700);line-height:1.4;}
+      .history-text strong{font-weight:600;color:var(--dark);}
+      .note-form{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+      .note-form textarea{width:100%;padding:10px 14px;border:1px solid var(--gray-200);border-radius:10px;font-size:13px;font-family:inherit;resize:vertical;min-height:70px;outline:none;transition:border .2s;}
+      .note-form textarea:focus{border-color:var(--brand);}
+      .note-form button{align-self:flex-end;padding:8px 20px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;transition:background .2s;font-family:inherit;}
+      .note-form button:hover{background:var(--brand-hover);}
+      .note-card{padding:14px;background:var(--gray-100);border-radius:10px;margin-bottom:10px;position:relative;}
+      .note-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+      .note-card-time{font-size:10px;color:var(--gray-400);}
+      .note-card-actions{display:flex;gap:4px;}
+      .note-card-actions button{width:26px;height:26px;border:none;border-radius:6px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;color:var(--gray-400);}
+      .note-card-actions button:hover{background:var(--gray-200);color:var(--gray-700);}
+      .note-card-actions button.note-delete:hover{background:#feecec;color:var(--red);}
+      .note-card-text{font-size:13px;color:var(--gray-700);line-height:1.5;}
+      .viewing-form{padding:14px;background:var(--gray-100);border-radius:10px;margin-bottom:20px;display:flex;flex-direction:column;gap:10px;}
+      .viewing-form-title{font-size:13px;font-weight:600;color:var(--dark);}
+      .viewing-form-row{display:flex;gap:10px;}
+      .viewing-form input{flex:1;padding:8px 12px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;outline:none;background:#fff;transition:border .2s;}
+      .viewing-form input:focus{border-color:var(--brand);}
+      .viewing-form button{padding:8px 20px;background:var(--dark);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;transition:background .2s;font-family:inherit;align-self:flex-end;}
+      .viewing-form button:hover{background:var(--gray-900);}
+      .viewing-card{display:flex;align-items:center;gap:12px;padding:14px;background:var(--gray-100);border-radius:10px;margin-bottom:10px;}
+      .viewing-date-box{width:48px;height:48px;background:var(--white);border:1px solid var(--gray-200);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+      .viewing-date-box .day{font-size:16px;font-weight:700;color:var(--dark);line-height:1;}
+      .viewing-date-box .month{font-size:9px;font-weight:600;color:var(--gray-500);text-transform:uppercase;}
+      .viewing-info{flex:1;}
+      .viewing-time{font-size:13px;font-weight:600;color:var(--dark);}
+      .viewing-addr{font-size:12px;color:var(--gray-500);margin-top:2px;}
+      .viewing-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;}
+      .viewing-status.upcoming{background:#e3f2fd;color:var(--blue);}
+      .viewing-status.done{background:#e8f5e9;color:var(--green);}
+
+      /* ══ Chat Thread ══ */
+      .chat-thread{display:flex;flex-direction:column;gap:14px;padding-bottom:8px;}
+      .chat-date-sep{text-align:center;font-size:11px;color:var(--gray-400);font-weight:500;padding:4px 0;position:relative;}
+      .chat-date-sep::before,.chat-date-sep::after{content:'';position:absolute;top:50%;width:calc(50% - 50px);height:1px;background:var(--gray-200);}
+      .chat-date-sep::before{left:0;}
+      .chat-date-sep::after{right:0;}
+      .chat-msg{max-width:80%;display:flex;flex-direction:column;}
+      .chat-msg.tenant{align-self:flex-start;}
+      .chat-msg.owner{align-self:flex-end;}
+      .chat-msg-name{font-size:10px;font-weight:600;margin-bottom:3px;padding:0 4px;}
+      .chat-msg.tenant .chat-msg-name{color:var(--gray-500);}
+      .chat-msg.owner .chat-msg-name{color:var(--brand);text-align:right;}
+      .chat-msg-bubble{padding:10px 14px;font-size:13px;line-height:1.55;position:relative;}
+      .chat-msg.tenant .chat-msg-bubble{background:var(--gray-100);border-radius:4px 14px 14px 14px;color:var(--gray-700);}
+      .chat-msg.owner .chat-msg-bubble{background:var(--brand-light);border-radius:14px 4px 14px 14px;color:var(--dark);}
+      .chat-msg-time{font-size:10px;color:var(--gray-400);margin-top:3px;padding:0 4px;}
+      .chat-msg.owner .chat-msg-time{text-align:right;}
+      .chat-reply-bar{position:sticky;bottom:0;background:var(--white);border-top:1px solid var(--gray-200);padding:14px 0 4px;display:flex;align-items:center;gap:10px;margin-top:8px;}
+      .chat-reply-btn{flex:1;padding:11px;background:var(--dark);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
+      .chat-reply-btn:hover{background:var(--gray-900);}
+      .chat-reply-hint{font-size:11px;color:var(--gray-400);text-align:center;margin-top:6px;}
+      .chat-empty{text-align:center;padding:40px 20px;color:var(--gray-400);font-size:13px;}
+      .chat-unread-badge{align-self:center;background:var(--brand-light);color:var(--brand);font-size:10px;font-weight:600;padding:3px 12px;border-radius:10px;}
+
+      /* ══ Suggested Note Chips ══ */
+      .note-suggestions{margin-top:10px;}
+      .note-suggestions-title{font-size:10px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+      .note-chip-list{display:flex;flex-wrap:wrap;gap:5px;}
+      .note-chip{display:inline-flex;align-items:center;padding:5px 12px;background:#f0f4f8;border:1px solid #dce3eb;border-radius:14px;font-size:11px;font-weight:500;color:#5a6f85;cursor:pointer;transition:all .2s;font-family:inherit;text-align:left;line-height:1.3;white-space:nowrap;}
+      .note-chip:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-light);}
+      .note-chip:active{transform:scale(0.97);}
+
+      /* ══ Analytics Section ══ */
+      .analytics-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+      .analytics-header h3{font-size:18px;font-weight:700;color:var(--dark);}
+      .analytics-filter{padding:8px 16px;border:1px solid var(--gray-200);border-radius:20px;font-size:13px;font-family:inherit;outline:none;background:#fff;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:34px;transition:border .2s;}
+      .analytics-filter:focus{border-color:var(--brand);}
+      .analytics-grid{display:flex;flex-direction:column;}
+      .analytics-card{background:var(--white);border-radius:16px;padding:28px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+      .analytics-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+      .analytics-card-title{font-size:15px;font-weight:700;color:var(--dark);}
+      .analytics-card-sub{font-size:11px;color:var(--gray-400);margin-top:2px;}
+
+      .analytics-divider{border:none;border-top:1px solid var(--gray-100);margin:28px 0;}
+      .analytics-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+      .analytics-section-title{font-size:14px;font-weight:700;color:var(--dark);}
+      .analytics-section-sub{font-size:11px;color:var(--gray-400);}
+      /* Bar chart */
+      .bar-chart{display:flex;align-items:flex-end;gap:10px;height:150px;padding:10px 0;}
+      .bar-col{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;max-width:48px;}
+      .bar-fill{width:100%;border-radius:4px 4px 2px 2px;background:linear-gradient(180deg,#d94e1f 0%,#ef5a28 40%,#f5b89a 100%);transition:height .6s cubic-bezier(.4,0,.2,1);min-height:4px;position:relative;}
+      .bar-fill .bar-value{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:600;color:var(--gray-500);white-space:nowrap;}
+      .bar-label{font-size:9px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.2px;}
+      .bar-label.current{color:var(--white);background:var(--brand);padding:2px 6px;border-radius:8px;font-weight:700;font-size:8px;}
+      .chart-summary{display:flex;gap:32px;margin-top:20px;padding-top:18px;border-top:1px solid var(--gray-100);}
+      .chart-summary-item{display:block;}
+      .chart-summary-label{font-size:10px;color:var(--gray-400);text-transform:uppercase;font-weight:600;letter-spacing:.4px;}
+      .chart-summary-value{font-size:24px;font-weight:700;color:var(--dark);margin-top:4px;}
+      .chart-summary-value.brand{color:var(--brand);}
+      .chart-summary-change{font-size:12px;font-weight:600;margin-top:4px;}
+      .chart-summary-change.up{color:#27AE60;}
+      .chart-summary-change.down{color:#E74C3C;}
+      /* Funnel — vertical stepped */
+      .funnel-v{display:flex;flex-direction:column;align-items:flex-start;gap:0;padding:8px 0;width:100%;}
+      .funnel-row{display:flex;align-items:center;width:100%;}
+      .funnel-row-bar{height:38px;border-radius:6px;display:flex;align-items:center;padding:0 16px;color:#fff;font-weight:700;font-size:14px;transition:width .5s ease;}
+      .funnel-row-label{font-size:12px;color:var(--gray-500);font-weight:500;margin-left:14px;white-space:nowrap;}
+      .funnel-row-count{margin-left:auto;font-size:12px;color:var(--gray-400);font-weight:600;white-space:nowrap;}
+      .funnel-drop{display:flex;align-items:center;gap:6px;padding:6px 0;margin-left:24px;}
+      .funnel-drop-line{width:1px;height:12px;background:var(--gray-200);}
+      .funnel-drop-pct{font-size:11px;font-weight:700;color:var(--brand);background:var(--brand-light);padding:2px 10px;border-radius:10px;}
+      /* Bottleneck */
+      .bottleneck-row{display:flex;gap:28px;}
+      .bottleneck-stat-item{display:block;}
+      .bottleneck-stat-label{font-size:10px;color:var(--gray-400);text-transform:uppercase;font-weight:600;letter-spacing:.4px;}
+      .bottleneck-stat-value{font-size:16px;font-weight:700;color:var(--brand);margin-top:4px;}
+      .bottleneck-reason{font-size:12px;color:var(--gray-500);padding:12px 16px;background:var(--gray-100);border-radius:8px;margin-top:12px;}
+      .bottleneck-reason strong{color:var(--dark);}
+      /* Recommendation */
+      .reco-text{font-size:13px;color:var(--gray-500);line-height:1.7;}
+
+      /* ══ Vertical Status Board ══ */
+      .status-board{display:flex;flex-direction:column;gap:16px;}
+      .status-group{background:var(--white);border:1px solid var(--gray-200);border-radius:14px;overflow:hidden;}
+      .status-group-header{display:flex;align-items:center;gap:10px;padding:14px 20px;cursor:pointer;user-select:none;transition:background .15s;}
+      .status-group-header:hover{background:var(--gray-100);}
+      .status-group-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+      .status-group-label{font-size:14px;font-weight:600;color:var(--dark);flex:1;}
+      .status-group-count{background:var(--gray-100);border:1px solid var(--gray-200);color:var(--gray-500);font-size:11px;font-weight:700;padding:2px 10px;border-radius:10px;}
+      .status-group-chevron{color:var(--gray-400);transition:transform .2s;display:flex;align-items:center;}
+      .status-group.collapsed .status-group-chevron{transform:rotate(-90deg);}
+      .status-group.collapsed .status-group-body{display:none;}
+      .status-group-body{padding:4px 10px 10px;display:flex;flex-direction:column;gap:6px;min-height:40px;transition:background .2s;border-top:1px solid var(--gray-100);}
+      .status-group-body.drag-over{background:rgba(239,90,40,0.04);}
+      .status-group-body .request-card{cursor:grab;}
+      .status-group-body .request-card:active{cursor:grabbing;}
+      .status-group-body .request-card.dragging{opacity:0.35;transform:scale(0.98);}
+      .status-group-empty{padding:16px;text-align:center;font-size:12px;color:var(--gray-400);}
+
+      /* ══ Confirm Transition Modal ══ */
+      .confirm-card{width:420px;padding:32px;text-align:center;}
+      .confirm-icon{width:56px;height:56px;border-radius:50%;background:#fff8e1;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+      .confirm-card h2{font-size:18px;font-weight:700;margin-bottom:8px;}
+      .confirm-sub{font-size:13px;color:var(--gray-500);margin-bottom:24px;line-height:1.6;}
+      .confirm-sub strong{color:var(--dark);}
+      .confirm-actions{display:flex;gap:10px;}
+      .confirm-actions button{flex:1;padding:12px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:none;font-family:inherit;}
+      .btn-confirm{background:var(--brand);color:#fff;}
+      .btn-confirm:hover{background:var(--brand-hover);}
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <svg viewBox="0 0 40 40" fill="none">
+          <path d="M4 28V12l8-6v22L4 28z" fill="#EF5A28" />
+          <path d="M14 28V12l8-6v22l-8 0z" fill="#EF5A28" opacity=".7" />
+          <path d="M24 28V12l8-6v22l-8 0z" fill="#1A1A1A" />
+          <path d="M28 10l8-4v22l-8 0V10z" fill="#1A1A1A" opacity=".7" />
+        </svg>
+        MAYDON
+      </div>
+      <nav>
+        <a href="#"
+          ><span class="icon"
+            ><svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" /></svg></span
+          >Главная</a
+        >
+        <a href="#"
+          ><span class="icon"
+            ><svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+              /></svg></span
+          >Недвижимость</a
+        >
+        <a href="#"
+          ><span class="icon"
+            ><svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"
+              />
+              <rect x="8" y="2" width="8" height="4" rx="1" /></svg></span
+          >Объявления</a
+        >
+        <a href="#" class="active"
+          ><span class="icon"
+            ><svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+              /></svg></span
+          >Заявки<span class="badge">12</span></a
+        >
+        <a href="#"
+          ><span class="icon"
+            ><svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 00-3-3.87" />
+              <path d="M16 3.13a4 4 0 010 7.75" /></svg></span
+          >Арендаторы</a
+        >
+        <a href="#"
+          ><span class="icon"
+            ><svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+              <polyline points="14,2 14,8 20,8" /></svg></span
+          >Договоры</a
+        >
+        <a href="#"
+          ><span class="icon"
+            ><svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="1" y="4" width="22" height="16" rx="2" />
+              <line x1="1" y1="10" x2="23" y2="10" /></svg></span
+          >Оплаты</a
+        >
+        <a href="#"
+          ><span class="icon"
+            ><svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"
+              /></svg></span
+          >Настройки</a
+        >
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="search-box">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input type="text" placeholder="Фильтр и поиск" />
+        </div>
+        <div class="topbar-right">
+          <div class="notif">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 01-3.46 0" /></svg
+            ><span class="dot"></span>
+          </div>
+          <div
+            class="avatar"
+            style="
+              background: var(--brand-light);
+              color: var(--brand);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-weight: 600;
+              font-size: 14px;
+            "
+          >
+            ИФ
+          </div>
+          <span class="user-name">Имя Фамилия ▾</span>
+        </div>
+      </header>
+
+      <!-- Page -->
+      <div class="page">
+        <div class="page-header">
+          <h1>Заявки</h1>
+          <div class="filter-dropdowns" id="listFilters">
+            <div class="filter-select-wrap">
+              <select id="filterStatus" onchange="applyFilters()">
+                <option value="" disabled selected hidden>Статусы</option>
+                <option value="all">Все</option>
+                <option value="unread">Не просмотрено</option>
+                <option value="read">Просмотрено</option>
+                <option value="invitation">Принято</option>
+                <option value="rejected">Отказ</option>
+              </select>
+            </div>
+            <div class="filter-select-wrap">
+              <select id="filterObject" onchange="applyFilters()">
+                <option value="" disabled selected hidden>Объекты</option>
+                <option value="all">Все</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-navigation -->
+        <div class="sub-nav">
+          <a href="#" class="active" id="tabList" onclick="switchSection('list');return false;">Список</a>
+          <a href="#" id="tabCrm" onclick="switchSection('crm');return false;">CRM</a>
+          <a href="#" id="tabAnalytics" onclick="switchSection('analytics');return false;">Аналитика</a>
+        </div>
+
+        <!-- List View Section -->
+        <div id="sectionList">
+          <div class="request-list" id="requestList"></div>
+        </div>
+
+        <!-- CRM Pipeline Section -->
+        <div id="sectionCrm" class="hidden">
+          <div class="pipeline" id="pipeline"></div>
+        </div>
+
+        <!-- Analytics Section -->
+        <div id="sectionAnalytics" class="hidden">
+          <div id="analyticsContent"></div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span>Условия · 2026 Maydon</span>
+        <span>Сообщения</span>
+      </footer>
+    </div>
+
+    <!-- CRM Detail Panel Overlay -->
+    <div class="detail-overlay" id="detailOverlay"></div>
+
+    <!-- CRM Detail Panel -->
+    <div class="detail-panel" id="detailPanel">
+      <button class="dp-close" onclick="closeCrmDetail()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="dp-header">
+        <div class="dp-user">
+          <div class="dp-avatar" id="dpAvatar"></div>
+          <div>
+            <div class="dp-name" id="dpName"></div>
+            <div class="dp-entity-type" id="dpEntity"></div>
+          </div>
+        </div>
+        <div class="dp-stage-row">
+          <span class="dp-stage-label">Стадия:</span>
+          <select class="dp-stage-select" id="dpStageSelect" onchange="changeStageFromPanel()"></select>
+        </div>
+      </div>
+      <div class="dp-tabs" id="dpTabs">
+        <button class="active" onclick="switchCrmTab('overview')">Обзор</button>
+        <button onclick="switchCrmTab('notes')">Заметки</button>
+        <button onclick="switchCrmTab('viewings')">Просмотры</button>
+      </div>
+      <div class="dp-body" id="dpBody"></div>
+    </div>
+
+    <!-- ── Modal: Recommended Preview Card ── -->
+    <div class="modal-overlay" id="modal">
+      <div class="modal-card">
+        <button class="modal-close" onclick="closeModal()">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
+        <!-- Header Row -->
+        <div class="modal-header">
+          <div
+            class="modal-avatar"
+            id="mAvatar"
+            style="background: #e3f2fd; color: #2f80ed"
+          >
+            АИ
+          </div>
+          <div class="modal-header-info">
+            <div class="name-row">
+              <h2 id="mName">Ахмедов Ильхом</h2>
+            </div>
+            <div class="entity-type" id="mEntity">Физическое лицо</div>
+          </div>
+        </div>
+
+        <!-- Meta Row -->
+        <div class="modal-meta">
+          <img
+            class="listing-thumb"
+            id="mThumb"
+            src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=160&h=120&fit=crop"
+            alt=""
+          />
+          <div class="listing-info">
+            <div class="listing-name" id="mListing">Кв. 4Б, Здание 1</div>
+            <div class="time-ago" id="mTime">2 часа назад</div>
+          </div>
+        </div>
+
+        <!-- Tenant Comment -->
+        <div class="modal-message" id="mMsgSection">
+          <div class="msg-label">
+            Комментарий от арендатора
+          </div>
+          <div class="msg-bubble" id="mMsg">
+            «Здравствуйте, хотели бы назначить просмотр квартиры на этой неделе.
+            Удобно ли в среду после обеда?»
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="modal-actions">
+          <button class="btn-reject" onclick="event.stopPropagation();rejectFromModal()">
+            Отклонить
+          </button>
+          <button class="btn-accept" onclick="event.stopPropagation();acceptFromModal()">
+            Принять
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Confirm Transition Modal ═══ -->
+    <div class="modal-overlay" id="confirmModal">
+      <div class="modal-card confirm-card">
+        <button class="modal-close" onclick="closeConfirmModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="confirm-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F2994A" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <h2>Подтвердите перемещение</h2>
+        <p class="confirm-sub" id="confirmMsg"></p>
+        <div class="confirm-actions">
+          <button class="btn-cancel" onclick="closeConfirmModal()">Отмена</button>
+          <button class="btn-confirm" onclick="executeConfirmedTransition()">Подтвердить</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ── Config: Unified stages for List + CRM ── */
+      const STAGES = [
+        { key:'new',         label:'Новые заявки',          dot:'#F2994A' },
+        { key:'contact',     label:'Первичный контакт',     dot:'#2F80ED' },
+        { key:'viewing',     label:'Просмотры',             dot:'#9B59B6' },
+        { key:'negotiation', label:'Переговоры',            dot:'#17A2B8' },
+        { key:'contract',    label:'Заключение контракта',  dot:'#27AE60' },
+        { key:'rejected',    label:'Отказ',                 dot:'#E74C3C' }
+      ];
+
+      /* ── Unified Transition Engine (Option C) ── */
+      const STAGE_ORDER = { new:0, contact:1, viewing:2, negotiation:3, contract:4, rejected:5 };
+
+      function canTransition(fromKey, toKey) {
+        if (fromKey === toKey) return 'blocked';
+        // "Новые заявки" is fully protected — no stage can move back to it
+        if (toKey === 'new') return 'blocked';
+        // "Первичный контакт" is protected — only "Новые заявки" can move to it (with confirmation)
+        if (toKey === 'contact') return fromKey === 'new' ? 'allowed' : 'blocked';
+        // Moving FROM final statuses always requires confirmation
+        if (fromKey === 'contract' || fromKey === 'rejected') return 'confirm';
+        // Moving to rejected from any non-final stage is allowed
+        if (toKey === 'rejected') return 'allowed';
+        // Forward moves along the pipeline are allowed
+        if (STAGE_ORDER[toKey] > STAGE_ORDER[fromKey]) return 'allowed';
+        // Backward moves require confirmation
+        return 'confirm';
+      }
+
+      let pendingTransition = null;
+
+      function requestTransition(deal, newStageKey, onComplete) {
+        const result = canTransition(deal.stage, newStageKey);
+        if (result === 'blocked') return;
+        if (result === 'allowed') {
+          applyTransition(deal, newStageKey);
+          if (onComplete) onComplete();
+          return;
+        }
+        // 'confirm' — show confirmation dialog
+        const fromLabel = STAGES.find(s => s.key === deal.stage).label;
+        const toLabel = STAGES.find(s => s.key === newStageKey).label;
+        pendingTransition = { deal, newStageKey, onComplete };
+        document.getElementById('confirmMsg').innerHTML =
+          'Вы уверены, что хотите переместить заявку <strong>' + deal.name + '</strong> из стадии «<strong>' + fromLabel + '</strong>» в «<strong>' + toLabel + '</strong>»?';
+        document.getElementById('confirmModal').classList.add('open');
+      }
+
+      function applyTransition(deal, newStageKey) {
+        const oldLabel = STAGES.find(s => s.key === deal.stage).label;
+        const newStage = STAGES.find(s => s.key === newStageKey);
+        deal.stage = newStageKey;
+        deal.history.push({ time: crmNow(), text: 'Стадия: ' + oldLabel + ' -> <strong>' + newStage.label + '</strong>', color: newStage.dot });
+      }
+
+      function executeConfirmedTransition() {
+        if (!pendingTransition) return;
+        const { deal, newStageKey, onComplete } = pendingTransition;
+        applyTransition(deal, newStageKey);
+        pendingTransition = null;
+        document.getElementById('confirmModal').classList.remove('open');
+        if (onComplete) onComplete();
+      }
+
+      function closeConfirmModal() {
+        pendingTransition = null;
+        document.getElementById('confirmModal').classList.remove('open');
+        // Reset stage dropdown if it was changed in the detail panel
+        if (activeDealIdx !== null) {
+          const d = deals[activeDealIdx];
+          const sel = document.getElementById('dpStageSelect');
+          if (sel) sel.value = d.stage;
+        }
+      }
+
+      document.getElementById('confirmModal').addEventListener('click', function(e) { if (e.target === this) closeConfirmModal(); });
+
+      /* ── Populate dropdowns ── */
+      function populateObjectFilter(){
+        const sel=document.getElementById('filterObject');
+        sel.innerHTML='<option value="" disabled selected hidden>Объекты</option><option value="all">Все</option>';
+        const objs=[...new Set(deals.map(d=>d.listing))];
+        objs.forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=o; sel.appendChild(opt); });
+      }
+      function populateStatusFilter(){
+        const sel=document.getElementById('filterStatus');
+        sel.innerHTML='<option value="" disabled selected hidden>Стадии</option><option value="all">Все</option>';
+        STAGES.forEach(s=>{
+          if(s.key==='viewing'){
+            const o1=document.createElement('option');o1.value='viewing_upcoming';o1.textContent='Предстоящие просмотры';sel.appendChild(o1);
+            const o2=document.createElement('option');o2.value='viewing_done';o2.textContent='Проведенные просмотры';sel.appendChild(o2);
+          } else {
+            const o=document.createElement('option');o.value=s.key;o.textContent=s.label;sel.appendChild(o);
+          }
+        });
+      }
+
+      /* ── List: Render single card element ── */
+      function createRequestCard(d, draggable){
+        const realIdx=deals.indexOf(d);
+        const stageObj=STAGES.find(s=>s.key===d.stage)||{label:d.stage,key:'new'};
+        const entityShort=d.entity==='Физическое лицо'?'Физ. лицо':'Юр. лицо';
+        const sub=d.notes.length>0?entityShort+' · «'+d.notes[d.notes.length-1].text.substring(0,50)+'...»':entityShort;
+        const card=document.createElement('div');
+        card.className='request-card';
+        card.onclick=()=>openModal(realIdx);
+        if(draggable){
+          card.draggable=true;
+          card.dataset.id=d.id;
+          card.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',d.id);card.classList.add('dragging');});
+          card.addEventListener('dragend',()=>{card.classList.remove('dragging');document.querySelectorAll('.status-group-body.drag-over').forEach(el=>el.classList.remove('drag-over'));});
+        }
+        card.innerHTML=`
+          <div class="rc-avatar" style="background:${d.bg};color:${d.color};">${d.initials}</div>
+          <div class="rc-info"><div class="rc-name">${d.name}</div><div class="rc-sub">${sub}</div></div>
+          <div class="rc-listing"><img src="${d.thumb}" alt=""><span>${d.listing}</span></div>
+          <div class="rc-time">${d.time}</div>
+          <div class="rc-status ${stageObj.key}">${stageObj.label}</div>
+        `;
+        return card;
+      }
+
+      /* ── List: Render vertical status board ── */
+      function renderStatusBoard(list){
+        list = list || deals;
+        const isFiltered = list !== deals;
+        const container=document.getElementById('requestList');
+        container.innerHTML='';
+        container.className='status-board';
+
+        STAGES.forEach(status=>{
+          const items=list.filter(d=>d.stage===status.key);
+
+          // When filtered, hide empty groups entirely
+          if(isFiltered && items.length===0) return;
+
+          const group=document.createElement('div');
+          group.className='status-group';
+
+          // Header
+          const header=document.createElement('div');
+          header.className='status-group-header';
+          header.innerHTML=`<div class="status-group-dot" style="background:${status.dot}"></div><span class="status-group-label">${status.label}</span><span class="status-group-count">${items.length}</span><span class="status-group-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span>`;
+          header.addEventListener('click',()=>group.classList.toggle('collapsed'));
+          group.appendChild(header);
+
+          // Body
+          const body=document.createElement('div');
+          body.className='status-group-body';
+          body.dataset.status=status.key;
+
+          // Drag-and-drop events
+          body.addEventListener('dragover',e=>{e.preventDefault();body.classList.add('drag-over');});
+          body.addEventListener('dragleave',e=>{if(!body.contains(e.relatedTarget))body.classList.remove('drag-over');});
+          body.addEventListener('drop',e=>{
+            e.preventDefault();body.classList.remove('drag-over');
+            const id=parseInt(e.dataTransfer.getData('text/plain'));
+            const deal=deals.find(d=>d.id===id);
+            if(deal && deal.stage!==status.key){
+              requestTransition(deal, status.key, ()=>renderStatusBoard(list));
+            }
+          });
+
+          items.forEach(d=>body.appendChild(createRequestCard(d, true)));
+
+          group.appendChild(body);
+          container.appendChild(group);
+        });
+      }
+
+      /* ── Fallback flat render (unused but kept for compat) ── */
+      function renderCards(list){
+        const container=document.getElementById('requestList');
+        container.innerHTML='';
+        container.className='request-list';
+        if(list.length===0){ container.innerHTML='<div style="text-align:center;padding:40px;color:var(--gray-400);font-size:14px;">Нет заявок</div>'; return; }
+        list.forEach((d)=>{
+          container.appendChild(createRequestCard(d, false));
+        });
+      }
+
+      /* ── Apply filters (list + CRM) ── */
+      function applyFilters(){
+        const statusSel=document.getElementById('filterStatus');
+        const objSel=document.getElementById('filterObject');
+        let val=statusSel.value;
+        let obj=objSel.value;
+        if(val==='all'){ statusSel.selectedIndex=0; val=''; }
+        if(obj==='all'){ objSel.selectedIndex=0; obj=''; }
+        if(currentSection==='crm'){
+          renderPipeline(val,obj);
+        } else if(currentSection==='list'){
+          let filtered=deals;
+          if(val==='viewing_upcoming') filtered=filtered.filter(r=>r.stage==='viewing'&&r.viewings.some(v=>v.status==='upcoming'));
+          else if(val==='viewing_done') filtered=filtered.filter(r=>r.stage==='viewing'&&!r.viewings.some(v=>v.status==='upcoming'));
+          else if(val) filtered=filtered.filter(r=>r.stage===val);
+          if(obj) filtered=filtered.filter(r=>r.listing===obj);
+          renderStatusBoard(filtered);
+        }
+      }
+
+      /* ══ Section Toggle ══ */
+      let currentSection = 'list';
+      function switchSection(section){
+        currentSection=section;
+        document.getElementById('sectionList').classList.toggle('hidden', section!=='list');
+        document.getElementById('sectionCrm').classList.toggle('hidden', section!=='crm');
+        document.getElementById('tabList').classList.toggle('active', section==='list');
+        document.getElementById('tabCrm').classList.toggle('active', section==='crm');
+        document.getElementById('tabAnalytics').classList.toggle('active', section==='analytics');
+        document.getElementById('sectionAnalytics').classList.toggle('hidden', section!=='analytics');
+        populateStatusFilter();
+        populateObjectFilter();
+        if(section==='crm') renderPipeline();
+        else if(section==='analytics') renderAnalytics();
+        else { renderStatusBoard(deals); }
+      }
+
+
+      const deals = [
+        { id:0, initials:"АИ",bg:"#E3F2FD",color:"#2F80ED",name:"Ахмедов Ильхом",verified:true,entity:"Физическое лицо",listing:"Кв. 4Б, Здание 1",thumb:"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=120&h=90&fit=crop",time:"2 часа назад",msg:true,stage:"new",
+          notes:[{text:"Позвонил, попросил назначить просмотр на среду",time:"Сегодня, 14:30"}],viewings:[],history:[{time:"Сегодня, 12:00",text:"<strong>Новая заявка</strong> создана",color:"#F2994A"}],
+          messages:[{from:'tenant',name:'Ахмедов Ильхом',text:'Здравствуйте! Увидел ваше объявление на Maydon. Квартира ещё доступна?',time:'12:00',date:'Сегодня'},{from:'owner',name:'Вы',text:'Добрый день! Да, квартира свободна. Когда вам удобно посмотреть?',time:'12:15',date:'Сегодня'},{from:'tenant',name:'Ахмедов Ильхом',text:'Отлично! Хотели бы назначить просмотр на этой неделе. Удобно ли в среду после обеда?',time:'12:22',date:'Сегодня'},{from:'owner',name:'Вы',text:'Среда подойдёт. Давайте в 15:00?',time:'12:30',date:'Сегодня'},{from:'tenant',name:'Ахмедов Ильхом',text:'Идеально, договорились! Спасибо.',time:'12:35',date:'Сегодня'}]},
+        { id:1, initials:"ТС",bg:"#E8F5E9",color:"#27AE60",name:"ООО «ТехноСервис»",verified:true,entity:"Юридическое лицо",listing:"Офис 12, TowerUp",thumb:"https://images.unsplash.com/photo-1497366216548-37526070297c?w=120&h=90&fit=crop",time:"5 часов назад",msg:true,stage:"viewing",
+          notes:[{text:"Интересует долгосрочная аренда офиса",time:"Вчера, 15:00"}],viewings:[{date:"2026-02-26",time:"10:00",addr:"Офис 12, TowerUp, ул. Амира Темура 5",status:"upcoming"}],history:[{time:"Вчера, 09:00",text:"<strong>Новая заявка</strong> создана",color:"#F2994A"},{time:"Вчера, 15:00",text:"Стадия: -> <strong>Просмотры</strong>",color:"#9B59B6"}],
+          messages:[{from:'tenant',name:'ООО «ТехноСервис»',text:'Добрый день! Нас интересует долгосрочная аренда офиса на 2+ года. Возможна ли скидка?',time:'09:10',date:'Вчера'},{from:'owner',name:'Вы',text:'Здравствуйте! При аренде от 2 лет предоставляем скидку 10%. Хотите посмотреть офис?',time:'09:45',date:'Вчера'},{from:'tenant',name:'ООО «ТехноСервис»',text:'Да, хотим. Можно завтра в первой половине дня?',time:'10:05',date:'Вчера'},{from:'owner',name:'Вы',text:'Конечно, предлагаю в 10:00. Адрес: ул. Амира Темура 5, TowerUp, 3 этаж.',time:'10:20',date:'Вчера'},{from:'tenant',name:'ООО «ТехноСервис»',text:'Отлично, будем! Сколько парковочных мест входит в аренду?',time:'10:30',date:'Вчера'},{from:'owner',name:'Вы',text:'2 места на подземной парковке включены в стоимость.',time:'11:00',date:'Вчера'}]},
+        { id:2, initials:"КН",bg:"#FFF0EB",color:"#EF5A28",name:"Каримова Нилуфар",verified:false,entity:"Физическое лицо",listing:"Кв. 7А, Здание 3",thumb:"https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=120&h=90&fit=crop",time:"1 день назад",msg:false,stage:"negotiation",
+          notes:[{text:"Квартира понравилась, обсуждаем условия",time:"Вчера, 16:00"}],viewings:[{date:"2026-02-24",time:"11:00",addr:"Кв. 7А, Здание 3, ул. Бабура 8",status:"done"}],history:[{time:"3 дня назад",text:"<strong>Новая заявка</strong> создана",color:"#F2994A"},{time:"Вчера, 16:00",text:"Стадия: -> <strong>Переговоры</strong>",color:"#17A2B8"}],
+          messages:[{from:'tenant',name:'Каримова Нилуфар',text:'Здравствуйте, квартира выглядит замечательно! Есть ли мебель?',time:'14:00',date:'24 Фев'},{from:'owner',name:'Вы',text:'Да, полная меблировка: кухня, спальня, гостиная. Все новое.',time:'14:30',date:'24 Фев'},{from:'tenant',name:'Каримова Нилуфар',text:'Супер! Мы посмотрели, нам очень понравилось. Обсудим условия?',time:'16:00',date:'Вчера'},{from:'owner',name:'Вы',text:'Конечно! Напишите ваши пожелания по условиям и срокам.',time:'16:20',date:'Вчера'}]},
+        { id:3, initials:"РМ",bg:"#F3E5F5",color:"#8E24AA",name:"Рахматуллаев Мансур",verified:false,entity:"Физическое лицо",listing:"Кв. 2В, Terminal",thumb:"https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=120&h=90&fit=crop",time:"2 дня назад",msg:true,stage:"negotiation",
+          notes:[{text:"Просит скидку 10% на годовой контракт",time:"Сегодня, 10:00"},{text:"Семья с двумя детьми, нужна квартира с мебелью",time:"Вчера, 14:00"}],viewings:[{date:"2026-02-23",time:"15:00",addr:"Кв. 2В, Terminal, ул. Юнусабад 4",status:"done"}],history:[{time:"5 дней назад",text:"<strong>Новая заявка</strong> создана",color:"#F2994A"},{time:"Вчера, 14:00",text:"Стадия: -> <strong>Переговоры</strong>",color:"#17A2B8"}],
+          messages:[{from:'tenant',name:'Рахматуллаев Мансур',text:'Здравствуйте! Мы семья с двумя детьми, ищем квартиру с мебелью. Ваша подходит?',time:'10:00',date:'23 Фев'},{from:'owner',name:'Вы',text:'Добрый день! Да, квартира полностью меблирована. Есть детская площадка во дворе.',time:'10:30',date:'23 Фев'},{from:'tenant',name:'Рахматуллаев Мансур',text:'Отлично! Мы посмотрели квартиру, нам подходит. Возможна ли скидка 10% при годовом контракте?',time:'10:00',date:'Сегодня'},{from:'owner',name:'Вы',text:'Могу предложить скидку 7%. Это максимум, который могу согласовать.',time:'10:15',date:'Сегодня'},{from:'tenant',name:'Рахматуллаев Мансур',text:'Давайте подумаем и вернёмся с ответом завтра.',time:'10:25',date:'Сегодня'}]},
+        { id:4, initials:"ОБ",bg:"#E3F2FD",color:"#2F80ED",name:"ИП «Орбита Бизнес»",verified:true,entity:"Юридическое лицо",listing:"Склад 5, Terminal",thumb:"https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=120&h=90&fit=crop",time:"3 дня назад",msg:true,stage:"contract",
+          notes:[{text:"Договор подписан, заезд 01.03",time:"Вчера, 12:00"}],viewings:[{date:"2026-02-22",time:"14:00",addr:"Склад 5, Terminal, ул. Фаргона 1",status:"done"}],history:[{time:"7 дней назад",text:"<strong>Новая заявка</strong> создана",color:"#F2994A"},{time:"Вчера, 12:00",text:"Стадия: -> <strong>Заключение контракта</strong>",color:"#27AE60"}],
+          messages:[{from:'tenant',name:'ИП «Орбита Бизнес»',text:'Добрый день! Нужен склад 200+ м² для хранения оборудования. Ваш подходит?',time:'11:00',date:'20 Фев'},{from:'owner',name:'Вы',text:'Здравствуйте! Да, площадь склада 250 м², высота потолков 6м. Подъезд для фур.',time:'11:30',date:'20 Фев'},{from:'tenant',name:'ИП «Орбита Бизнес»',text:'Идеально. Посмотрели, всё устраивает. Готовим документы на заключение.',time:'14:30',date:'22 Фев'},{from:'owner',name:'Вы',text:'Отлично! Договор отправлен на почту. Заезд 01.03.',time:'12:00',date:'Вчера'}]},
+        { id:5, initials:"ДА",bg:"#FFF8E1",color:"#F2994A",name:"Давронов Алишер",verified:false,entity:"Физическое лицо",listing:"Кв. 4Б, Здание 1",thumb:"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=120&h=90&fit=crop",time:"4 часа назад",msg:true,stage:"new",
+          notes:[],viewings:[],history:[{time:"Сегодня, 08:00",text:"<strong>Новая заявка</strong> создана",color:"#F2994A"}],
+          messages:[{from:'tenant',name:'Давронов Алишер',text:'Ассалому алайкум! Квартира ещё свободна? Хотел бы узнать подробнее.',time:'08:00',date:'Сегодня'},{from:'tenant',name:'Давронов Алишер',text:'И ещё вопрос — допускаются ли домашние животные?',time:'08:05',date:'Сегодня'}]},
+        { id:6, initials:"МИ",bg:"#E8F5E9",color:"#27AE60",name:"Мирзаева Ирода",verified:true,entity:"Физическое лицо",listing:"Кв. 7А, Здание 3",thumb:"https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=120&h=90&fit=crop",time:"6 часов назад",msg:false,stage:"contact",
+          notes:[{text:"Интересуется долгосрочной арендой",time:"Сегодня, 11:00"}],viewings:[],history:[{time:"Сегодня, 06:00",text:"<strong>Новая заявка</strong> создана",color:"#F2994A"},{time:"Сегодня, 11:00",text:"Стадия: -> <strong>Первичный контакт</strong>",color:"#2F80ED"}],
+          messages:[{from:'tenant',name:'Мирзаева Ирода',text:'Добрый день! Интересует аренда на длительный срок, от 1 года.',time:'06:00',date:'Сегодня'},{from:'owner',name:'Вы',text:'Здравствуйте! Минимальный срок — 6 месяцев, но при годовом контракте фиксируем цену.',time:'11:00',date:'Сегодня'},{from:'tenant',name:'Мирзаева Ирода',text:'Это очень удобно! Можно назначить просмотр?',time:'11:15',date:'Сегодня'}]},
+        { id:7, initials:"СП",bg:"#F3E5F5",color:"#8E24AA",name:"ООО «СтройПром»",verified:true,entity:"Юридическое лицо",listing:"Склад 5, Terminal",thumb:"https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=120&h=90&fit=crop",time:"1 день назад",msg:true,stage:"viewing",
+          notes:[{text:"Нужен склад под стройматериалы",time:"Вчера, 10:00"}],viewings:[{date:"2026-02-28",time:"11:00",addr:"Склад 5, Terminal, ул. Фаргона 1",status:"upcoming"}],history:[{time:"2 дня назад",text:"<strong>Новая заявка</strong> создана",color:"#F2994A"},{time:"Вчера, 10:00",text:"Стадия: -> <strong>Просмотры</strong>",color:"#9B59B6"}],
+          messages:[{from:'tenant',name:'ООО «СтройПром»',text:'Здравствуйте! Ищем склад для хранения стройматериалов. Есть ли охрана и видеонаблюдение?',time:'08:00',date:'24 Фев'},{from:'owner',name:'Вы',text:'Добрый день! Да, территория огорожена, 24/7 охрана и 8 камер видеонаблюдения.',time:'09:00',date:'24 Фев'},{from:'tenant',name:'ООО «СтройПром»',text:'Хорошо. Можем посмотреть 28 февраля?',time:'10:00',date:'Вчера'},{from:'owner',name:'Вы',text:'Да, предлагаю в 11:00. Адрес: ул. Фаргона 1, Terminal.',time:'10:30',date:'Вчера'},{from:'tenant',name:'ООО «СтройПром»',text:'Записали, будем вовремя. Спасибо!',time:'10:45',date:'Вчера'}]},
+        { id:8, initials:"ХА",bg:"#FEECEC",color:"#E74C3C",name:"Хасанов Абдулла",verified:false,entity:"Физическое лицо",listing:"Кв. 2В, Terminal",thumb:"https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=120&h=90&fit=crop",time:"5 дней назад",msg:false,stage:"rejected",
+          notes:[{text:"Отказ по причине цены",time:"3 дня назад"}],viewings:[{date:"2026-02-20",time:"16:00",addr:"Кв. 2В, Terminal, ул. Юнусабад 4",status:"done"}],history:[{time:"5 дней назад",text:"<strong>Новая заявка</strong> создана",color:"#F2994A"},{time:"3 дня назад",text:"Стадия: -> <strong>Отказ</strong>",color:"#E74C3C"}],
+          messages:[{from:'tenant',name:'Хасанов Абдулла',text:'Здравствуйте, интересует квартира. Какая окончательная цена?',time:'10:00',date:'21 Фев'},{from:'owner',name:'Вы',text:'Добрый день! Цена — 5 000 000 сум/мес + залог 1 месяц.',time:'10:30',date:'21 Фев'},{from:'tenant',name:'Хасанов Абдулла',text:'К сожалению, это выше нашего бюджета. Спасибо за информацию.',time:'11:00',date:'23 Фев'}]},
+        { id:9, initials:"ЛФ",bg:"#E3F2FD",color:"#2F80ED",name:"ООО «Логистик Фасад»",verified:true,entity:"Юридическое лицо",listing:"Офис 12, TowerUp",thumb:"https://images.unsplash.com/photo-1497366216548-37526070297c?w=120&h=90&fit=crop",time:"3 дня назад",msg:false,stage:"contact",
+          notes:[{text:"Рассматривают 2 варианта, наш в приоритете",time:"Вчера, 09:00"}],viewings:[],history:[{time:"3 дня назад",text:"<strong>Новая заявка</strong> создана",color:"#F2994A"},{time:"Вчера, 09:00",text:"Стадия: -> <strong>Первичный контакт</strong>",color:"#2F80ED"}],
+          messages:[{from:'tenant',name:'ООО «Логистик Фасад»',text:'Добрый день! Рассматриваем ваш офис и ещё один вариант. Можете прислать планировку?',time:'14:00',date:'23 Фев'},{from:'owner',name:'Вы',text:'Конечно! Отправляю план этажа. Общая площадь 120 м², open-space + 2 кабинета.',time:'14:30',date:'23 Фев'},{from:'tenant',name:'ООО «Логистик Фасад»',text:'Спасибо! Ваш вариант пока в приоритете. Вернёмся с решением на этой неделе.',time:'09:00',date:'Вчера'}]},
+        { id:10, initials:"ТА",bg:"#FFF0EB",color:"#EF5A28",name:"Турсунов Азиз",verified:false,entity:"Физическое лицо",listing:"Кв. 4Б, Здание 1",thumb:"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=120&h=90&fit=crop",time:"4 дня назад",msg:true,stage:"contract",
+          notes:[{text:"Готов подписать при снижении залога",time:"Сегодня, 09:00"}],viewings:[{date:"2026-02-21",time:"10:00",addr:"Кв. 4Б, Здание 1, ул. Навои 12",status:"done"}],history:[{time:"4 дня назад",text:"<strong>Новая заявка</strong> создана",color:"#F2994A"},{time:"2 дня назад",text:"Стадия: -> <strong>Заключение контракта</strong>",color:"#27AE60"}],
+          messages:[{from:'tenant',name:'Турсунов Азиз',text:'Здравствуйте! Квартира понравилась после просмотра. Готов подписать, но можно ли снизить залог?',time:'09:00',date:'Сегодня'},{from:'owner',name:'Вы',text:'Добрый день! Стандартный залог — 1 месяц. Могу предложить разбить на 2 платежа.',time:'09:15',date:'Сегодня'},{from:'tenant',name:'Турсунов Азиз',text:'Это был бы отличный вариант! Когда можем подписать договор?',time:'09:20',date:'Сегодня'},{from:'owner',name:'Вы',text:'Можем в пятницу. Подготовлю договор к подписанию.',time:'09:30',date:'Сегодня'}]},
+        { id:11, initials:"НШ",bg:"#E8F5E9",color:"#27AE60",name:"Назарова Шахло",verified:true,entity:"Физическое лицо",listing:"Кв. 7А, Здание 3",thumb:"https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=120&h=90&fit=crop",time:"1 неделю назад",msg:false,stage:"contract",
+          notes:[{text:"Договор на 6 месяцев, заезд 28.02",time:"2 дня назад"}],viewings:[{date:"2026-02-18",time:"11:00",addr:"Кв. 7А, Здание 3, ул. Бабура 8",status:"done"}],history:[{time:"1 неделю назад",text:"<strong>Новая заявка</strong> создана",color:"#F2994A"},{time:"2 дня назад",text:"Стадия: -> <strong>Заключение контракта</strong>",color:"#27AE60"}],
+          messages:[{from:'tenant',name:'Назарова Шахло',text:'Добрый день! Хотим арендовать на 6 месяцев. Возможен ли заезд с 28 февраля?',time:'11:00',date:'19 Фев'},{from:'owner',name:'Вы',text:'Здравствуйте! Да, квартира будет готова к 28.02. Договор на 6 месяцев — без проблем.',time:'11:30',date:'19 Фев'},{from:'tenant',name:'Назарова Шахло',text:'Замечательно! Документы подготовим до конца недели.',time:'12:00',date:'19 Фев'},{from:'owner',name:'Вы',text:'Договор подписан. Ключи передадим 28.02 в 10:00. Добро пожаловать!',time:'15:00',date:'24 Фев'}]}
+      ];
+
+      let activeDealIdx = null;
+      let activeCrmTab = 'overview';
+
+      function renderPipeline(filterStage,filterObj){
+        const el=document.getElementById('pipeline');
+        el.innerHTML='';
+        let filtered=deals;
+        if(filterStage==='viewing_upcoming'){
+          filtered=filtered.filter(d=>d.stage==='viewing'&&d.viewings.some(v=>v.status==='upcoming'));
+        } else if(filterStage==='viewing_done'){
+          filtered=filtered.filter(d=>d.stage==='viewing'&&!d.viewings.some(v=>v.status==='upcoming'));
+        } else if(filterStage){
+          filtered=filtered.filter(d=>d.stage===filterStage);
+        }
+        if(filterObj) filtered=filtered.filter(d=>d.listing===filterObj);
+        STAGES.forEach(stage=>{
+          const items=filtered.filter(d=>d.stage===stage.key);
+          const col=document.createElement('div');
+          col.className='pipe-col';
+          col.innerHTML=`<div class="pipe-col-header"><div class="pipe-col-title"><div class="pipe-col-dot" style="background:${stage.dot}"></div><span>${stage.label}</span></div><div class="pipe-col-count">${items.length}</div></div>`;
+          const body=document.createElement('div');
+          body.className='pipe-col-body';
+          body.dataset.stage=stage.key;
+          body.addEventListener('dragover',e=>{e.preventDefault();body.classList.add('drag-over');});
+          body.addEventListener('dragleave',e=>{if(!body.contains(e.relatedTarget))body.classList.remove('drag-over');});
+          body.addEventListener('drop',e=>{
+            e.preventDefault();body.classList.remove('drag-over');
+            const id=parseInt(e.dataTransfer.getData('text/plain'));
+            const deal=deals.find(d=>d.id===id);
+            if(deal && deal.stage!==stage.key){
+              requestTransition(deal, stage.key, ()=>{
+                renderPipeline();
+                if(activeDealIdx!==null && deals[activeDealIdx].id===id) renderCrmBody();
+              });
+            }
+          });
+          items.forEach(d=>{
+            const eShort=d.entity==='Физическое лицо'?'Физ. лицо':'Юр. лицо';
+            /* Viewing status badge for 'Просмотры' stage */
+            let viewBadge='';
+            if(d.stage==='viewing' && d.viewings.length>0){
+              const hasUpcoming=d.viewings.some(v=>v.status==='upcoming');
+              if(hasUpcoming) viewBadge='<div class="pc-view-badge upcoming">Предстоит</div>';
+              else viewBadge='<div class="pc-view-badge done">Проведен</div>';
+            }
+            const card=document.createElement('div');
+            card.className='pipe-card';
+            card.draggable=true;
+            card.onclick=()=>openCrmDetail(d.id);
+            card.innerHTML=`<div class="pc-header"><div class="pc-avatar" style="background:${d.bg};color:${d.color};">${d.initials}</div><div><div class="pc-name">${d.name}</div><div class="pc-entity">${eShort}</div></div></div><div class="pc-listing"><img src="${d.thumb}" alt=""><span>${d.listing}</span></div>${viewBadge}<div class="pc-footer"><div class="pc-time">${d.time}</div></div>`;
+            card.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',d.id);card.classList.add('dragging');});
+            card.addEventListener('dragend',()=>{card.classList.remove('dragging');document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));});
+            body.appendChild(card);
+          });
+          col.appendChild(body);
+          el.appendChild(col);
+        });
+      }
+
+      /* ══ CRM Detail Panel ══ */
+      function openCrmDetail(id){
+        activeDealIdx=deals.findIndex(d=>d.id===id);
+        activeCrmTab='overview';
+        const d=deals[activeDealIdx];
+        document.getElementById('dpAvatar').textContent=d.initials;
+        document.getElementById('dpAvatar').style.background=d.bg;
+        document.getElementById('dpAvatar').style.color=d.color;
+        document.getElementById('dpName').textContent=d.name;
+        document.getElementById('dpEntity').textContent=d.entity;
+        const sel=document.getElementById('dpStageSelect');
+        sel.innerHTML='';
+        STAGES.forEach(s=>{const o=document.createElement('option');o.value=s.key;o.textContent=s.label;if(s.key===d.stage)o.selected=true;sel.appendChild(o);});
+        updateCrmTabButtons();
+        renderCrmBody();
+        document.getElementById('detailOverlay').classList.add('open');
+        document.getElementById('detailPanel').classList.add('open');
+      }
+      function closeCrmDetail(){
+        document.getElementById('detailOverlay').classList.remove('open');
+        document.getElementById('detailPanel').classList.remove('open');
+        activeDealIdx=null;
+      }
+      document.getElementById('detailOverlay').addEventListener('click',closeCrmDetail);
+
+      function switchCrmTab(tab){activeCrmTab=tab;updateCrmTabButtons();renderCrmBody();}
+      function updateCrmTabButtons(){
+        document.querySelectorAll('#dpTabs button').forEach((b,i)=>{
+          const tabs=['overview','notes','viewings'];
+          b.classList.toggle('active',tabs[i]===activeCrmTab);
+        });
+      }
+      function changeStageFromPanel(){
+        if(activeDealIdx===null)return;
+        const d=deals[activeDealIdx];
+        const newKey=document.getElementById('dpStageSelect').value;
+        if(newKey===d.stage)return;
+        requestTransition(d, newKey, ()=>{
+          renderPipeline();
+          renderCrmBody();
+        });
+      }
+
+      function renderCrmBody(){
+        if(activeDealIdx===null)return;
+        const d=deals[activeDealIdx];
+        const body=document.getElementById('dpBody');
+        if(activeCrmTab==='overview'){
+          let histHtml='<div class="history-list">';
+          [...d.history].reverse().forEach(h=>{histHtml+=`<div class="history-item"><div class="history-dot" style="background:${h.color}"></div><div class="history-time">${h.time}</div><div class="history-text">${h.text}</div></div>`;});
+          histHtml+='</div>';
+          body.innerHTML=`<div class="ov-section"><div class="ov-section-title">Объект</div><div class="ov-listing"><img src="${d.thumb}" alt=""><div><div class="ov-listing-name">${d.listing}</div><div class="ov-listing-sub">Заявка: ${d.time}</div></div></div></div><div class="ov-section"><div class="ov-section-title">Информация</div><div class="ov-meta"><div class="ov-meta-item"><div class="ov-meta-label">Тип</div><div class="ov-meta-value">${d.entity}</div></div><div class="ov-meta-item"><div class="ov-meta-label">Стадия</div><div class="ov-meta-value">${STAGES.find(s=>s.key===d.stage).label}</div></div><div class="ov-meta-item"><div class="ov-meta-label">Просмотры</div><div class="ov-meta-value">${d.viewings.length}</div></div><div class="ov-meta-item"><div class="ov-meta-label">Заметки</div><div class="ov-meta-value">${d.notes.length}</div></div></div></div><div class="ov-section"><div class="ov-section-title">История</div>${histHtml}</div>`;
+        } else if(activeCrmTab==='notes'){
+          const suggestions=STAGE_SUGGESTIONS[d.stage]||[];
+          let sugHtml='';
+          if(suggestions.length>0){
+            sugHtml='<div class="note-suggestions"><div class="note-suggestions-title">Рекомендации</div><div class="note-chip-list">';
+            suggestions.forEach((s,i)=>{sugHtml+=`<button class="note-chip" onclick="addSuggestedNote(${i})">${s}</button>`;});
+            sugHtml+='</div></div>';
+          }
+          let html='';
+          const notesReversed=[...d.notes].reverse();
+          notesReversed.forEach((n,ri)=>{const origIdx=d.notes.length-1-ri;html+=`<div class="note-card"><div class="note-card-header"><div class="note-card-time">${n.time}</div><div class="note-card-actions"><button class="note-edit" title="Редактировать" onclick="editCrmNote(${origIdx})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="note-delete" title="Удалить" onclick="deleteCrmNote(${origIdx})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button></div></div><div class="note-card-text">${n.text}</div></div>`;});
+          if(d.notes.length===0) html+='<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px;">Нет заметок</div>';
+          const isRejected=d.stage==='rejected';
+          const placeholder=isRejected?'Причина отказа...':'Добавить заметку...';
+          let rejDropdown='';
+          if(isRejected){
+            rejDropdown=`<div style="margin-bottom:8px;"><label style="font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;">Этап отказа</label><select id="rejectionStage" style="width:100%;padding:8px 12px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;outline:none;background:#fff;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 12px center;transition:border .2s;"><option value="" disabled selected hidden>Выберите этап</option><option value="contact">Первичный контакт</option><option value="viewing">Просмотры</option><option value="negotiation">Переговоры</option><option value="contract">Заключение контракта</option></select></div>`;
+          }
+          html+=rejDropdown+`<div class="note-form"><textarea id="noteInput" placeholder="${placeholder}"></textarea></div>`+sugHtml+`<div class="note-form" style="margin-top:8px;"><button onclick="addCrmNote()" style="background:var(--dark);width:100%;">Добавить</button></div>`;
+          body.innerHTML=html;
+        } else if(activeCrmTab==='messages'){
+          let html='<div class="chat-thread">';
+          if(!d.messages||d.messages.length===0){
+            html+='<div class="chat-empty">Нет сообщений</div>';
+          } else {
+            let lastDate='';
+            d.messages.forEach(m=>{
+              if(m.date!==lastDate){html+=`<div class="chat-date-sep">${m.date}</div>`;lastDate=m.date;}
+              const cls=m.from==='owner'?'owner':'tenant';
+              html+=`<div class="chat-msg ${cls}"><div class="chat-msg-name">${m.name}</div><div class="chat-msg-bubble">${m.text}</div><div class="chat-msg-time">${m.time}</div></div>`;
+            });
+          }
+          html+='</div>';
+          html+=`<div class="chat-reply-bar"><button class="chat-reply-btn" onclick="alert('Переход в раздел Сообщения...')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Ответить</button></div><div class="chat-reply-hint">Откроется раздел «Сообщения»</div>`;
+          body.innerHTML=html;
+        } else if(activeCrmTab==='viewings'){
+          let html=`<div class="viewing-form"><div class="viewing-form-title">Назначить просмотр</div><div class="viewing-form-row"><input type="date" id="viewDate"><input type="time" id="viewTime"></div><input type="text" id="viewAddr" placeholder="Адрес" value="${d.listing}"><button onclick="addCrmViewing()">Назначить</button></div>`;
+          d.viewings.forEach(v=>{const dt=new Date(v.date);const months=['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];html+=`<div class="viewing-card"><div class="viewing-date-box"><div class="day">${dt.getDate()}</div><div class="month">${months[dt.getMonth()]}</div></div><div class="viewing-info"><div class="viewing-time">${v.time}</div><div class="viewing-addr">${v.addr}</div></div><div class="viewing-status ${v.status}">${v.status==='upcoming'?'Предстоит':'Проведен'}</div></div>`;});
+          if(d.viewings.length===0) html+='<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px;">Нет просмотров</div>';
+          body.innerHTML=html;
+        }
+      }
+
+      const STAGE_SUGGESTIONS = {
+        contact: [
+          'Клиент заинтересован, просит подробности',
+          'Клиент просит перезвонить позже',
+          'Клиент хочет назначить просмотр',
+          'Клиент сравнивает с другими вариантами',
+          'Клиенту не понравилось'
+        ],
+        viewing: [
+          'Просмотр только предстоит',
+          'Просмотр прошел успешно — клиенту всё понравилось',
+          'Просмотр прошел неуспешно — клиенту не понравилось',
+          'Клиент просит повторный просмотр',
+          'Клиенту не понравилось'
+        ],
+        negotiation: [
+          'Обсуждаем цену и условия',
+          'Клиент просит скидку',
+          'Клиент согласен с условиями',
+          'Клиент просит изменить сроки',
+          'Клиент думает, обещал вернуться'
+        ],
+        contract: [
+          'Договор отправлен клиенту на рассмотрение',
+          'Клиент подписал договор',
+          'Клиент просит изменить условия договора',
+          'Ожидается оплата залога',
+          'Клиенту не понравилось'
+        ],
+        rejected: [
+          'Клиенту не понравились условия',
+          'Клиенту не понравилась цена',
+          'Клиент выбрал другой вариант',
+          'Клиент передумал арендовать',
+          'Клиенту не понравилось'
+        ]
+      };
+
+      function addCrmNote(){
+        if(activeDealIdx===null)return;
+        const input=document.getElementById('noteInput');
+        const text=input.value.trim();if(!text)return;
+        const d=deals[activeDealIdx];const t=crmNow();
+        d.notes.push({text,time:t});
+        d.history.push({time:t,text:'Добавлена заметка',color:'#2F80ED'});
+        renderCrmBody();
+      }
+      function addSuggestedNote(idx){
+        if(activeDealIdx===null)return;
+        const d=deals[activeDealIdx];
+        const suggestions=STAGE_SUGGESTIONS[d.stage]||[];
+        if(idx>=suggestions.length)return;
+        const text=suggestions[idx];const t=crmNow();
+        d.notes.push({text,time:t});
+        d.history.push({time:t,text:'Добавлена заметка',color:'#2F80ED'});
+        renderCrmBody();
+      }
+      function deleteCrmNote(idx){
+        if(activeDealIdx===null)return;
+        const d=deals[activeDealIdx];
+        if(idx<0||idx>=d.notes.length)return;
+        d.notes.splice(idx,1);
+        renderCrmBody();
+      }
+      function editCrmNote(idx){
+        if(activeDealIdx===null)return;
+        const d=deals[activeDealIdx];
+        if(idx<0||idx>=d.notes.length)return;
+        const note=d.notes[idx];
+        d.notes.splice(idx,1);
+        renderCrmBody();
+        setTimeout(()=>{const ta=document.getElementById('noteInput');if(ta){ta.value=note.text;ta.focus();}},50);
+      }
+      function addCrmViewing(){
+        if(activeDealIdx===null)return;
+        const date=document.getElementById('viewDate').value;
+        const time=document.getElementById('viewTime').value;
+        const addr=document.getElementById('viewAddr').value.trim();
+        if(!date||!time||!addr)return;
+        const d=deals[activeDealIdx];const t=crmNow();
+        d.viewings.push({date,time,addr,status:'upcoming'});
+        d.history.push({time:t,text:`Просмотр назначен на ${crmFormatDate(date)} в ${time}`,color:'#2F80ED'});
+        renderCrmBody();renderPipeline();
+      }
+      function crmNow(){const n=new Date();const p=v=>String(v).padStart(2,'0');return `Сегодня, ${p(n.getHours())}:${p(n.getMinutes())}`;}
+      function crmFormatDate(ds){const d=new Date(ds);return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}`;}
+
+      /* ══ Analytics ══ */
+      const MONTH_DATA = {
+        all: { months:['Сен','Окт','Ноя','Дек','Янв','Фев'], requests:[8,12,6,15,10,12] },
+        'Кв. 4Б, Здание 1': { months:['Сен','Окт','Ноя','Дек','Янв','Фев'], requests:[3,5,2,6,4,5] },
+        'Кв. 7А, Здание 3': { months:['Сен','Окт','Ноя','Дек','Янв','Фев'], requests:[2,3,1,4,3,3] },
+        'Офис 12, TowerUp': { months:['Сен','Окт','Ноя','Дек','Янв','Фев'], requests:[1,2,2,3,1,2] },
+        'Кв. 2В, Terminal': { months:['Сен','Окт','Ноя','Дек','Янв','Фев'], requests:[1,1,0,1,1,1] },
+        'Склад 5, Terminal': { months:['Сен','Окт','Ноя','Дек','Янв','Фев'], requests:[1,1,1,1,1,1] }
+      };
+      const REJECTION_REASONS = {
+        'Клиенту не понравилась цена': 'Рекомендуется пересмотреть ценовую политику. Попробуйте сравнить цену с аналогичными предложениями на рынке.',
+        'Клиенту не понравились условия': 'Обратите внимание на условия аренды — возможно, стоит предложить более гибкий график или сроки.',
+        'Клиент выбрал другой вариант': 'Рекомендуется улучшить конкурентное преимущество: обновить фото, сделать косметический ремонт или добавить бонусы.',
+        'Клиент передумал арендовать': 'Попробуйте запрашивать причину отказа раньше, чтобы предотвратить потерю клиента.',
+        'Клиенту не понравилось': 'Рекомендуется провести улучшения: обновить мебель, сделать ремонт или повысить качество фотографий в объявлении.'
+      };
+
+      function renderAnalytics(filterObj){
+        const container=document.getElementById('analyticsContent');
+        // Determine data
+        const objKey=filterObj||'all';
+        const md=MONTH_DATA[objKey]||MONTH_DATA['all'];
+        const total=md.requests.reduce((a,b)=>a+b,0);
+        const curMonth=md.requests[md.requests.length-1];
+        const prevMonth=md.requests[md.requests.length-2];
+        const changeVal=prevMonth?Math.round(((curMonth-prevMonth)/prevMonth)*100):0;
+        const changeDir=changeVal>=0?'up':'down';
+        const changeSign=changeVal>=0?'+':'';
+        const maxVal=Math.max(...md.requests,1);
+
+        // Funnel counts from deals
+        const fDeals=filterObj?deals.filter(d=>d.listing===filterObj):deals;
+        const funnel={new:0,contact:0,viewing:0,negotiation:0,contract:0,rejected:0};
+        fDeals.forEach(d=>{
+          funnel[d.stage]=(funnel[d.stage]||0)+1;
+          // Count deals that passed through stages (simulate)
+          if(d.stage==='contact'||d.stage==='viewing'||d.stage==='negotiation'||d.stage==='contract'||d.stage==='rejected'){funnel.new++;}
+          if(d.stage==='viewing'||d.stage==='negotiation'||d.stage==='contract'){funnel.contact++;}
+          if(d.stage==='negotiation'||d.stage==='contract'){funnel.viewing++;}
+          if(d.stage==='contract'){funnel.negotiation++;}
+        });
+        // Ensure minimum
+        if(funnel.new===0) funnel.new=total;
+        const funnelStages=[
+          {key:'new',label:'Новые заявки',count:funnel.new,color:'#ef5a28'},
+          {key:'contact',label:'Первичный контакт',count:funnel.contact,color:'#c4542a'},
+          {key:'viewing',label:'Просмотры',count:funnel.viewing,color:'#8c4a35'},
+          {key:'negotiation',label:'Переговоры',count:funnel.negotiation,color:'#6a4038'},
+          {key:'contract',label:'Контракт',count:funnel.contract,color:'#5a3f38'}
+        ];
+        // Calculate drop-offs
+        let maxDrop=0, maxDropStage='', maxDropPct=0;
+        for(let i=0;i<funnelStages.length-1;i++){
+          const from=funnelStages[i].count||1;
+          const to=funnelStages[i+1].count;
+          const drop=from-to;
+          const pct=Math.round((drop/from)*100);
+          if(drop>maxDrop&&funnelStages[i+1].key!=='rejected'){maxDrop=drop;maxDropStage=funnelStages[i].label+' → '+funnelStages[i+1].label;maxDropPct=pct;}
+        }
+        if(!maxDropStage){maxDropStage='Просмотры → Контракт';maxDropPct=62;}
+
+        // Top rejection reason from notes of rejected deals
+        const rejectedDeals=fDeals.filter(d=>d.stage==='rejected');
+        const reasonCounts={};
+        rejectedDeals.forEach(d=>{d.notes.forEach(n=>{
+          Object.keys(REJECTION_REASONS).forEach(r=>{if(n.text.toLowerCase().includes(r.toLowerCase().substring(0,15))) reasonCounts[r]=(reasonCounts[r]||0)+1;});
+        });});
+        let topReason='Клиенту не понравилась цена';
+        let topReasonCount=0;
+        Object.entries(reasonCounts).forEach(([r,c])=>{if(c>topReasonCount){topReason=r;topReasonCount=c;}});
+        const recommendation=REJECTION_REASONS[topReason]||'Рекомендуется проанализировать отказы для улучшения конверсии.';
+
+        // Build object filter options
+        const listings=[...new Set(deals.map(d=>d.listing))];
+        let objOpts='<option value="all"'+(objKey==='all'?' selected':'')+'>Все объекты</option>';
+        listings.forEach(l=>{objOpts+=`<option value="${l}"${l===objKey?' selected':''}>${l}</option>`;});
+
+        // Render
+        let html=`
+        <div class="analytics-header">
+          <h3>Аналитика заявок</h3>
+          <select class="analytics-filter" onchange="renderAnalytics(this.value==='all'?null:this.value)">${objOpts}</select>
+        </div>
+        <div class="analytics-grid">
+          <div class="analytics-card">
+            <div class="analytics-card-head"><div><div class="analytics-card-title">Заявки по месяцам</div><div class="analytics-card-sub">Сентябрь 2025 — Февраль 2026</div></div></div>
+            <div class="bar-chart">`;
+        md.months.forEach((m,i)=>{
+          const h=Math.round((md.requests[i]/maxVal)*130);
+          const isCur=i===md.months.length-1;
+          html+=`<div class="bar-col"><div class="bar-fill" style="height:${h}px"><span class="bar-value">${md.requests[i]}</span></div><span class="bar-label${isCur?' current':''}">${m}</span></div>`;
+        });
+        html+=`</div>
+            <div class="chart-summary">
+              <div class="chart-summary-item"><div class="chart-summary-label">Всего</div><div class="chart-summary-value">${total}</div></div>
+              <div class="chart-summary-item"><div class="chart-summary-label">Этот месяц</div><div class="chart-summary-value">${curMonth}</div><div class="chart-summary-change ${changeDir}">${changeSign}${changeVal}% к прошлому</div></div>
+            </div>
+
+            <hr class="analytics-divider">
+
+            <div class="analytics-section-head"><div class="analytics-section-title">Воронка конверсии</div><div class="analytics-section-sub">Переход между стадиями</div></div>
+            <div class="funnel-v">`;
+        const maxCount=funnelStages[0].count||1;
+        funnelStages.forEach((s,i)=>{
+          const widthPct=Math.max(Math.round((s.count/maxCount)*100),20);
+          html+=`<div class="funnel-row"><div class="funnel-row-bar" style="background:${s.color};width:${widthPct}%">${s.count}</div><span class="funnel-row-label">${s.label}</span></div>`;
+          if(i<funnelStages.length-1){
+            const next=funnelStages[i+1].count;
+            const pct=s.count?Math.round((next/s.count)*100):0;
+            html+=`<div class="funnel-drop"><div class="funnel-drop-line"></div><span class="funnel-drop-pct">${pct}%</span><div class="funnel-drop-line"></div></div>`;
+          }
+        });
+        html+=`</div>
+
+            <hr class="analytics-divider">
+
+            <div class="analytics-section-head"><div class="analytics-section-title">Узкое горлышко</div><div class="analytics-section-sub">Этап с наибольшей потерей</div></div>
+            <div class="bottleneck-row">
+              <div class="bottleneck-stat-item"><div class="bottleneck-stat-label">Этап</div><div class="bottleneck-stat-value">${maxDropStage}</div></div>
+              <div class="bottleneck-stat-item"><div class="bottleneck-stat-label">Потеря</div><div class="bottleneck-stat-value">${maxDropPct}%</div></div>
+            </div>
+            <div class="bottleneck-reason"><strong>Частая причина:</strong> ${topReason}</div>
+
+            <hr class="analytics-divider">
+
+            <div class="analytics-section-head"><div class="analytics-section-title">Рекомендация</div></div>
+            <div class="reco-text">${recommendation}</div>
+          </div>
+        </div>`; 
+        container.innerHTML=html;
+      }
+
+      /* ── Modal ── */
+      function openModal(i) {
+        const d = deals[i];
+        document.getElementById("mAvatar").textContent = d.initials;
+        document.getElementById("mAvatar").style.background = d.bg;
+        document.getElementById("mAvatar").style.color = d.color;
+        document.getElementById("mName").textContent = d.name;
+        document.getElementById("mEntity").textContent = d.entity;
+        document.getElementById("mListing").textContent = d.listing;
+        document.getElementById("mTime").textContent = d.time;
+        document.getElementById("mThumb").src = d.thumb;
+        const ms = document.getElementById("mMsgSection");
+        const lastNote = d.notes.length > 0 ? d.notes[d.notes.length-1].text : null;
+        if (lastNote) { ms.style.display = "block"; document.getElementById("mMsg").textContent = lastNote; }
+        else { ms.style.display = "none"; }
+        /* Hide accept/reject for final statuses */
+        const actions = document.querySelector('#modal .modal-actions');
+        if(d.stage==='contract' || d.stage==='rejected'){
+          actions.style.display='none';
+        } else {
+          actions.style.display='';
+        }
+        document.getElementById("modal").classList.add("open");
+      }
+      function closeModal() { document.getElementById("modal").classList.remove("open"); modalDealIdx=null; }
+      document.getElementById("modal").addEventListener("click", function(e){ if(e.target===this) closeModal(); });
+
+      /* ── Modal status change ── */
+      let modalDealIdx = null;
+      const _origOpenModal = openModal;
+      openModal = function(i){ modalDealIdx=i; _origOpenModal(i); };
+
+      function acceptFromModal(){
+        if(modalDealIdx===null)return;
+        requestTransition(deals[modalDealIdx], 'contract', ()=>{
+          closeModal();
+          renderStatusBoard();
+        });
+      }
+      function rejectFromModal(){
+        if(modalDealIdx===null)return;
+        requestTransition(deals[modalDealIdx], 'rejected', ()=>{
+          closeModal();
+          renderStatusBoard();
+        });
+      }
+
+      /* Init */
+      populateStatusFilter();
+      populateObjectFilter();
+      renderStatusBoard(deals);
+    </script>
+
+  </body>
+</html>

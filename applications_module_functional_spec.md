@@ -37,7 +37,8 @@ The **Applications** module is the core pipeline for managing rental inquiries o
 | **Tenant (Арендатор)** | A user seeking to rent a property. The Tenant sends applications and tracks their statuses. |
 | **Listing (Объект / Объявление)** | A published property advertisement created by an Owner. Each Application is tied to exactly one Listing. |
 | **Stage (Стадия)** | The current position of an application within the unified 6-stage pipeline (e.g., New, Initial Contact, Viewings, Negotiation, Contract Closing, Rejected). |
-| **Final Stage** | A stage from which no further transition is allowed. In this module: **Contract Closing** and **Rejected** are final on the Owner side. |
+| **Protected Stage** | An early pipeline stage that cannot receive applications from later stages. In this module: **New Applications** and **Initial Contact** are protected. |
+| **Final Stage** | A late pipeline stage from which moving an application requires explicit confirmation. In this module: **Contract Closing** and **Rejected** are final. |
 | **List View (Список)** | Owner-side view mode: a vertical status board grouping applications by their current stage. Used for triage and quick stage changes. |
 | **CRM View (CRM)** | Owner-side view mode: a horizontal Kanban pipeline grouping applications by the same stage model. Used for deeper relationship management with built-in notes, viewings, and history. |
 | **Verification** | A mandatory one-time identity check (via OneID or E-imzo) that a Tenant must complete before their first application is delivered to an Owner. |
@@ -101,27 +102,51 @@ The Owner sees a **6-stage pipeline** used identically in both List View and CRM
 | **Contract Closing** | `contract` | Заключение контракта | `#27AE60` | Negotiation / signing of tenant agreement | Yes |
 | **Rejected** | `rejected` | Отказ | `#E74C3C` | Deal fell through at any stage | Yes |
 
-#### Owner-Side Stage Transition Table (List View)
+#### 3.3.1 Unified Transition Engine
+
+> [!IMPORTANT]  
+> Both **List View** and **CRM View** share a single transition rule engine (`canTransition`). The same rules apply regardless of which view the Owner uses — drag-and-drop, stage dropdown, or Accept/Reject buttons. Every stage change also creates a timestamped **history entry** on the application record.
+
+The engine classifies every transition attempt into one of three outcomes:
+
+| Outcome | Behavior |
+|---------|----------|
+| ✅ **Allowed** | Transition executes immediately, no prompt |
+| ⚠️ **Confirmation** | A confirmation dialog appears: *"Вы уверены, что хотите переместить заявку [Name] из стадии «[From]» в «[To]»?"* — Owner must click "Подтвердить" to proceed or "Отмена" to cancel |
+| 🚫 **Blocked** | Transition is silently ignored (drop has no effect, dropdown resets) |
+
+#### 3.3.2 Transition Rules
+
+**Protected stages** — "Новые заявки" and "Первичный контакт" cannot receive applications from later stages:
+
+| Target Stage | Rule |
+|---|---|
+| **Новые заявки** | 🚫 Blocked from all stages — no application can move here |
+| **Первичный контакт** | ✅ Allowed from "Новые заявки" only; 🚫 Blocked from all other stages |
+
+**General transition rules:**
+
+| Transition Type | Outcome | Example |
+|---|---|---|
+| Forward (natural pipeline order) | ✅ Allowed | Просмотры → Переговоры |
+| To "Отказ" from any active stage | ✅ Allowed | Переговоры → Отказ |
+| Backward (to an earlier active stage) | ⚠️ Confirmation | Переговоры → Просмотры |
+| From final stage (Контракт / Отказ) | ⚠️ Confirmation | Контракт → Переговоры |
+| To protected stage | 🚫 Blocked | Просмотры → Новые заявки |
+| Same stage | 🚫 Blocked | Просмотры → Просмотры |
+
+#### 3.3.3 Full Transition Matrix (Both Views)
 
 | From ↓ \ To → | New | Initial Contact | Viewings | Negotiation | Contract Closing | Rejected |
 |----------------|:---:|:---:|:---:|:---:|:---:|:---:|
-| **New** | — | ✅ Drag | ✅ Drag | ✅ Drag | ✅ Drag | ✅ Drag |
-| **Initial Contact** | ❌ Blocked | — | ✅ Drag | ✅ Drag | ✅ Drag | ✅ Drag |
-| **Viewings** | ❌ Blocked | ✅ Drag | — | ✅ Drag | ✅ Drag | ✅ Drag |
-| **Negotiation** | ❌ Blocked | ✅ Drag | ✅ Drag | — | ✅ Drag | ✅ Drag |
-| **Contract Closing** | ❌ Blocked | ❌ Blocked | ❌ Blocked | ❌ Blocked | — | ❌ Blocked |
-| **Rejected** | ❌ Blocked | ❌ Blocked | ❌ Blocked | ❌ Blocked | ❌ Blocked | — |
+| **New** | — | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Initial Contact** | 🚫 | — | ✅ | ✅ | ✅ | ✅ |
+| **Viewings** | 🚫 | 🚫 | — | ✅ | ✅ | ✅ |
+| **Negotiation** | 🚫 | 🚫 | ⚠️ | — | ✅ | ✅ |
+| **Contract Closing** | 🚫 | 🚫 | ⚠️ | ⚠️ | — | ⚠️ |
+| **Rejected** | 🚫 | 🚫 | ⚠️ | ⚠️ | ⚠️ | — |
 
-**Rules:**
-1. No application can be moved **back** to "New" from any other stage.
-2. **Contract Closing** and **Rejected** are **final**: applications in these stages cannot be moved to any other stage.
-3. Applications in final stages are **not draggable**; their cards have no drag handle.
-4. Non-final stages (except "New" as a target) allow free movement via drag-and-drop.
-
-#### Owner-Side Stage Transitions (CRM View)
-
-> [!NOTE]  
-> CRM stages have **no hard transition restrictions** — any stage can be moved to any other stage via drag-and-drop or the stage dropdown in the detail panel. This is a deliberate design choice to give Owners flexibility in pipeline management.
+✅ = Allowed (no prompt) · ⚠️ = Confirmation required · 🚫 = Blocked
 
 ---
 
@@ -210,8 +235,8 @@ The Owner sees a **6-stage pipeline** used identically in both List View and CRM
 |----------|---------|
 | **Who** | Owner |
 | **Where** | List View — drag application card between stage groups |
-| **Allowed transitions** | See transition table in §3.3 |
-| **Restrictions** | Cannot drag to "New"; cannot drag from "Contract Closing" or "Rejected" |
+| **Rules** | Governed by the unified transition engine (§3.3.2). All cards are draggable; the engine determines whether the drop is allowed, requires confirmation, or is blocked. |
+| **History** | Every successful stage change creates a timestamped history entry on the application record |
 
 #### 4.2.5 Move Between Stages (Drag-and-Drop — CRM View)
 
@@ -219,8 +244,9 @@ The Owner sees a **6-stage pipeline** used identically in both List View and CRM
 |----------|---------|
 | **Who** | Owner |
 | **Where** | CRM View — drag card between pipeline columns **or** use stage dropdown in detail panel |
-| **Result** | Stage updated; history entry created with timestamp |
-| **Restrictions** | No hard restrictions — any stage-to-stage move is allowed |
+| **Rules** | Governed by the same unified transition engine as List View (§3.3.2). Identical rules apply — forward moves are free, backward moves require confirmation, protected stages are blocked. |
+| **History** | Every successful stage change creates a timestamped history entry on the application record |
+| **Dropdown cancel** | If the Owner selects a stage that requires confirmation and then cancels, the dropdown resets to the current stage |
 
 #### 4.2.6 CRM Detail Panel Actions
 
@@ -228,7 +254,7 @@ Available in the side panel when clicking a CRM card:
 
 | Action | Tab | Description |
 |--------|-----|-------------|
-| **Change Stage** | Header | Dropdown to select a new stage (all 6 stages available) |
+| **Change Stage** | Header | Dropdown to select a new stage; transition governed by unified engine (§3.3.2) — may be instant, require confirmation, or be blocked depending on the move |
 | **View Overview** | Overview | See listing info, metadata (entity type, current stage, viewings count, notes count), and full history timeline |
 | **Add/Edit/Delete Notes** | Notes | Free-text notes with stage-aware suggested templates; rejection stage dropdown when deal is in "Rejected" stage |
 | **Schedule Viewings** | Viewings | Add property viewings (date, time, address) with status tracking (Предстоит / Проведен) |
@@ -247,7 +273,7 @@ Available in the side panel when clicking a CRM card:
 | **Purpose** | Quick decision-making on incoming applications |
 | **Layout** | Vertical status board with collapsible groups: Новые заявки → Первичный контакт → Просмотры → Переговоры → Заключение контракта → Отказ |
 | **Data Source** | Application **stage** field (unified with CRM View) |
-| **Key interactions** | Click card → Modal with Accept/Reject buttons; Drag-and-drop between stage groups (with restrictions — see §3.3) |
+| **Key interactions** | Click card → Modal with Accept/Reject buttons; Drag-and-drop between stage groups governed by unified transition engine (§3.3.2) |
 | **Available to** | Owner only |
 | **Filtering** | By stage (with sub-filters for viewing status: Предстоящие просмотры / Проведенные просмотры), by listing |
 
@@ -258,7 +284,7 @@ Available in the side panel when clicking a CRM card:
 | **Purpose** | Full relationship management: tracking each deal from first contact through contract closing |
 | **Layout** | Horizontal Kanban board with 6 columns: Новые заявки → Первичный контакт → Просмотры → Переговоры → Заключение контракта → Отказ |
 | **Data Source** | Application **stage** field (unified with List View) |
-| **Key interactions** | Click card → Side panel with 3 tabs (Overview, Notes, Viewings); Drag-and-drop between stages (no restrictions); Stage dropdown in panel |
+| **Key interactions** | Click card → Side panel with 3 tabs (Overview, Notes, Viewings); Drag-and-drop between stages and stage dropdown — same unified transition rules as List View (§3.3.2) |
 | **Available to** | Owner only |
 | **Filtering** | By stage (with sub-filters for viewing status: Предстоящие просмотры / Проведенные просмотры), by listing |
 
@@ -280,9 +306,10 @@ graph LR
 > - Changing a stage in List View is immediately reflected in CRM View, and vice versa.
 > - The difference is in **presentation** (vertical board vs. horizontal Kanban) and **interaction depth** (quick triage modal vs. full detail panel with notes, viewings, and history).
 >
-> **Drag-and-drop rules differ between views:**
-> - **List View** enforces transition restrictions (no backward move to "New"; no moves from final stages).
-> - **CRM View** allows unrestricted stage-to-stage movement for pipeline flexibility.
+> **Both views share identical transition rules** via a unified transition engine (§3.3.2):
+> - Forward moves execute immediately without prompts.
+> - Backward moves and moves from final stages require explicit confirmation.
+> - Protected stages (New, Initial Contact) cannot receive applications from later stages.
 
 ### 5.4 Tenant View
 
@@ -314,26 +341,27 @@ graph LR
 | Tenant tries to cancel a rejected application | "Cancel" button is **hidden**; no action possible |
 | Owner cancels / withdraws an application | **Not supported** — Owners can only Accept or Reject |
 
-### 6.3 Final Stages (Irreversible)
+### 6.3 Final Stages
 
 | Stage | Reversible? | Why |
 |-------|------------|-----|
-| **Contract Closing** (`contract`) | No | Represents a commitment; triggers downstream processes (contract signing, move-in, etc.) |
-| **Rejected** (`rejected`) | No | Represents a deliberate decision; Tenant is notified |
+| **Contract Closing** (`contract`) | ⚠️ With confirmation | Represents a commitment; reversal is rare but sometimes necessary (e.g., contract fell through) |
+| **Rejected** (`rejected`) | ⚠️ With confirmation | Represents a deliberate decision; reopening signals a change of mind that requires explicit intent |
 
 **Consequences:**
-- Cards in final stages are **not draggable** in List View.
-- Accept/Reject buttons are **hidden** in the modal for applications in final stages.
-- In List View, dropping a card onto final stage groups from another final stage is blocked.
-- In CRM View, cards in all stages remain draggable (no restrictions enforced).
+- Cards in final stages **are draggable** in both views, but moving them always triggers a **confirmation dialog**.
+- Accept/Reject buttons are **hidden** in the modal for applications already in final stages.
+- Moving from a final stage to a **protected stage** (New, Initial Contact) is **blocked** regardless of confirmation.
 
-### 6.4 Forbidden Transitions (List View)
+### 6.4 Protected & Blocked Transitions (Both Views)
 
-| Transition | Blocked? | Mechanism |
-|-----------|----------|-----------|
-| Any stage → New (`new`) | ✅ Blocked | Drop is ignored |
-| Contract Closing → Any other stage | ✅ Blocked | Card is not draggable; buttons hidden |
-| Rejected → Any other stage | ✅ Blocked | Card is not draggable; buttons hidden |
+| Transition | Result | Mechanism |
+|-----------|--------|-----------|
+| Any stage → New (`new`) | 🚫 Blocked | Drop is silently ignored |
+| Any stage (except New) → Initial Contact (`contact`) | 🚫 Blocked | Drop is silently ignored; dropdown resets |
+| Contract Closing → Active stage (Viewings, Negotiation) | ⚠️ Confirmation | Confirmation dialog; Owner must explicitly approve |
+| Rejected → Active stage (Viewings, Negotiation, Contract) | ⚠️ Confirmation | Confirmation dialog; Owner must explicitly approve |
+| Contract Closing / Rejected → Protected stage (New, Contact) | 🚫 Blocked | Protected stage rule takes precedence over confirmation |
 
 ### 6.5 Listing Deactivation
 
@@ -370,7 +398,7 @@ The following items were originally open questions. They have been resolved with
 | # | Question | Decision |
 |---|----------|----------|
 | 1 | **Should the CRM stage and List View status be linked?** | **Yes — they are now unified.** Both List View and CRM View use the same `stage` field with the same 6-stage pipeline. This eliminates confusion from having two independent classification systems. The difference between views is now purely presentational (vertical board vs. horizontal Kanban) and interactional (triage modal vs. full detail panel). |
-| 2 | **Can an Owner undo a Reject decision?** | **No — Rejected remains final in List View.** In CRM View, unrestricted drag-and-drop is allowed for flexibility, but List View enforces finality. If the Owner made a mistake, the Tenant can re-apply (allowed per §6.1). |
+| 2 | **Can an Owner undo a Reject decision?** | **Yes — with explicit confirmation.** Both List View and CRM View allow moving applications out of "Rejected", but the unified transition engine requires the Owner to confirm this action via a dialog. This preserves flexibility while preventing accidental reversals. The Tenant can also re-apply independently (per §6.1). |
 | 3 | **What happens after Accept?** | **Stage changes to `contract` (Contract Closing).** The Owner uses CRM tabs (Notes, Viewings) to coordinate next steps manually. Contract creation and automated follow-ups can be added as a separate module later. |
 | 4 | **Is there a notification system?** | **Yes — in-app notifications at minimum.** Tenants receive in-app notifications when their application status changes (Read, Accepted, Rejected). Push and email notifications can be added later. |
 | 5 | **What is the difference between Tenant "Sent" and "Unread"?** | **"Sent" is a brief transitional state.** `sent` = application submitted but not yet delivered/processed. `unread` = delivered to the Owner's dashboard but not yet opened. The `sent` → `unread` transition is near-instant (backend processing). |
