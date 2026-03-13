@@ -11,13 +11,13 @@
 
 ### What It Is
 
-The **Applications** module is the core pipeline for managing rental inquiries on the Maydon platform. It connects two independent user roles — **Tenant** (applicant) and **Owner** (landlord) — through a structured request lifecycle.
+The **Applications** module handles rental requests on the Maydon platform. It connects two user roles — **Tenant** (applicant) and **Owner** (landlord) — through a step-by-step request process.
 
 ### What Problem It Solves
 
-- Provides tenants with a way to express interest in renting a property and track the status of their inquiry.
-- Gives property owners a centralized workspace to receive, evaluate, and manage incoming applications across their listings.
-- Eliminates ambiguity in the application process by enforcing a clear stage model with defined transitions.
+- Lets tenants send rental requests and track what happens with them.
+- Gives property owners one place to receive, review, and manage all incoming applications.
+- Keeps the process clear by using a defined set of stages with specific transition rules.
 
 ### How Each Role Uses It
 
@@ -32,15 +32,15 @@ The **Applications** module is the core pipeline for managing rental inquiries o
 
 | Term | Definition |
 |------|-----------| 
-| **Application (Заявка)** | A formal rental inquiry sent by a Tenant to an Owner regarding a specific Listing. Contains a message and is subject to a stage lifecycle. |
+| **Application (Заявка)** | A rental request sent by a Tenant to an Owner for a specific Listing. Contains a message and goes through a series of stages. |
 | **Owner (Владелец)** | A user who owns or manages property listings. The Owner receives and processes incoming applications. Also referred to as "Landlord". |
 | **Tenant (Арендатор)** | A user seeking to rent a property. The Tenant sends applications and tracks their statuses. |
 | **Listing (Объект / Объявление)** | A published property advertisement created by an Owner. Each Application is tied to exactly one Listing. |
 | **Stage (Стадия)** | The current position of an application within the unified 6-stage pipeline (e.g., New, Initial Contact, Viewings, Negotiation, Contract Closing, Rejected). |
-| **Protected Stage** | An early pipeline stage that cannot receive applications from later stages. In this module: **New Applications** and **Initial Contact** are protected. |
-| **Final Stage** | A late pipeline stage from which moving an application requires explicit confirmation. In this module: **Contract Closing** and **Rejected** are final. |
-| **List View (Список)** | Owner-side view mode: a vertical status board grouping applications by their current stage. Used for triage and quick stage changes. |
-| **CRM View (CRM)** | Owner-side view mode: a horizontal Kanban pipeline grouping applications by the same stage model. Used for deeper relationship management with built-in notes, viewings, and history. |
+| **Protected Stage** | An early stage that cannot receive applications from later stages. In this module: **New Applications** and **Initial Contact** are protected. |
+| **Final Stage** | A late stage from which moving an application requires the Owner to confirm the action. In this module: **Contract Closing** and **Rejected** are final. |
+| **List View (Список)** | Owner-side view: a vertical status board grouping applications by stage. Used for quick review and stage changes. |
+| **CRM View (CRM)** | Owner-side view: a horizontal Kanban board grouping applications by the same stages. Used for detailed management with notes, viewings, and history. |
 | **Verification** | A mandatory one-time identity check (via OneID or E-imzo) that a Tenant must complete before their first application is delivered to an Owner. |
 
 ---
@@ -57,7 +57,7 @@ The **Applications** module is the core pipeline for managing rental inquiries o
 
 ### 3.2 Tenant-Visible Statuses
 
-Tenants see a **5-status model** reflecting the lifecycle from their perspective:
+Tenants see a **5-status model** showing the application progress from their side:
 
 | Status | Key | Meaning | Triggered By | Final? |
 |--------|-----|---------|-------------|--------|
@@ -100,15 +100,15 @@ The Owner sees a **6-stage pipeline** used identically in both List View and CRM
 #### 3.3.1 Unified Transition Engine
 
 > [!IMPORTANT]  
-> Both **List View** and **CRM View** share a single transition rule engine (`canTransition`). The same rules apply regardless of which view the Owner uses — drag-and-drop, stage dropdown, or Accept/Reject buttons. Every stage change also creates a timestamped **history entry** on the application record.
+> Both **List View** and **CRM View** follow the same transition rules. The same rules apply whether the Owner uses drag-and-drop, the stage dropdown, or the Accept/Reject buttons. Every stage change also creates a timestamped **history entry** on the application record.
 
-The engine classifies every transition attempt into one of three outcomes:
+Every move attempt has one of three results:
 
 | Outcome | Behavior |
 |---------|----------|
-| ✅ **Allowed** | Transition executes immediately, no prompt |
-| ⚠️ **Confirmation** | A confirmation dialog appears: *"Вы уверены, что хотите переместить заявку [Name] из стадии «[From]» в «[To]»?"* — Owner must click "Подтвердить" to proceed or "Отмена" to cancel |
-| 🚫 **Blocked** | Transition is silently ignored (drop has no effect, dropdown resets) |
+| ✅ **Allowed** | Move happens immediately, no prompt |
+| ⚠️ **Confirmation** | A dialog asks: *"Вы уверены, что хотите переместить заявку [Name] из стадии «[From]» в «[To]»?"* — Owner must click "Подтвердить" or "Отмена" |
+| 🚫 **Blocked** | Nothing happens (drop is ignored, dropdown resets) |
 
 #### 3.3.2 Transition Rules
 
@@ -230,7 +230,7 @@ The engine classifies every transition attempt into one of three outcomes:
 |----------|---------|
 | **Who** | Owner |
 | **Where** | List View — drag application card between stage groups |
-| **Rules** | Governed by the unified transition engine (§3.3.2). All cards are draggable; the engine determines whether the drop is allowed, requires confirmation, or is blocked. |
+| **Rules** | All cards are draggable. The transition rules (§3.3.2) decide whether the drop goes through, asks for confirmation, or is blocked. |
 | **History** | Every successful stage change creates a timestamped history entry on the application record |
 
 #### 4.2.5 Move Between Stages (Drag-and-Drop — CRM View)
@@ -239,7 +239,7 @@ The engine classifies every transition attempt into one of three outcomes:
 |----------|---------|
 | **Who** | Owner |
 | **Where** | CRM View — drag card between pipeline columns **or** use stage dropdown in detail panel |
-| **Rules** | Governed by the same unified transition engine as List View (§3.3.2). Identical rules apply — forward moves are free, backward moves require confirmation, protected stages are blocked. |
+| **Rules** | Same transition rules as List View (§3.3.2). Forward moves go through freely, backward moves ask for confirmation, protected stages are blocked. |
 | **History** | Every successful stage change creates a timestamped history entry on the application record |
 | **Dropdown cancel** | If the Owner selects a stage that requires confirmation and then cancels, the dropdown resets to the current stage |
 
@@ -249,8 +249,8 @@ Available in the side panel when clicking a CRM card:
 
 | Action | Tab | Description |
 |--------|-----|-------------|
-| **Change Stage** | Header | Dropdown to select a new stage; transition governed by unified engine (§3.3.2) — may be instant, require confirmation, or be blocked depending on the move |
-| **View Overview** | Overview | See listing info, metadata (entity type, current stage, viewings count, notes count), and full history timeline |
+| **Change Stage** | Header | Dropdown to pick a new stage. Depending on the move, it may go through instantly, ask for confirmation, or be blocked (§3.3.2). |
+| **View Overview** | Overview | Listing info, application details (entity type, current stage, viewings count, notes count), and full history timeline |
 | **Add/Edit/Delete Notes** | Notes | Free-text notes with stage-aware suggested templates; rejection stage dropdown when deal is in "Rejected" stage |
 | **Schedule Viewings** | Viewings | Add property viewings (date, time, address) with status tracking (Предстоит / Проведен) |
 
@@ -268,7 +268,7 @@ Available in the side panel when clicking a CRM card:
 | **Purpose** | Quick decision-making on incoming applications |
 | **Layout** | Vertical status board with collapsible groups: Новые заявки → Первичный контакт → Просмотры → Переговоры → Заключение контракта → Отказ |
 | **Data Source** | Application **stage** field (unified with CRM View) |
-| **Key interactions** | Click card → Modal with Accept/Reject buttons; Drag-and-drop between stage groups governed by unified transition engine (§3.3.2) |
+| **Key interactions** | Click card → Modal with Accept/Reject buttons; Drag-and-drop between stage groups (see transition rules in §3.3.2) |
 | **Available to** | Owner only |
 | **Filtering** | By stage (with sub-filters for viewing status: Предстоящие просмотры / Проведенные просмотры), by listing |
 
@@ -276,10 +276,10 @@ Available in the side panel when clicking a CRM card:
 
 | Property | Details |
 |----------|---------|
-| **Purpose** | Full relationship management: tracking each deal from first contact through contract closing |
+| **Purpose** | Detailed deal management: tracking each application from first contact through contract closing |
 | **Layout** | Horizontal Kanban board with 6 columns: Новые заявки → Первичный контакт → Просмотры → Переговоры → Заключение контракта → Отказ |
 | **Data Source** | Application **stage** field (unified with List View) |
-| **Key interactions** | Click card → Side panel with 3 tabs (Overview, Notes, Viewings); Drag-and-drop between stages and stage dropdown — same unified transition rules as List View (§3.3.2) |
+| **Key interactions** | Click card → Side panel with 3 tabs (Overview, Notes, Viewings); Drag-and-drop between stages and stage dropdown — same rules as List View (§3.3.2) |
 | **Available to** | Owner only |
 | **Filtering** | By stage (with sub-filters for viewing status: Предстоящие просмотры / Проведенные просмотры), by listing |
 
@@ -296,14 +296,14 @@ graph LR
 ```
 
 > [!IMPORTANT]  
-> **List View** and **CRM View** operate on the **same underlying dataset** and use the **same stage field**:
-> - Both views read/write the `stage` field.
-> - Changing a stage in List View is immediately reflected in CRM View, and vice versa.
-> - The difference is in **presentation** (vertical board vs. horizontal Kanban) and **interaction depth** (quick triage modal vs. full detail panel with notes, viewings, and history).
+> **List View** and **CRM View** work with the **same data** and the **same stage field**:
+> - Both views read and write the same `stage` field.
+> - Changing a stage in List View is immediately shown in CRM View, and vice versa.
+> - The difference is in **layout** (vertical board vs. horizontal Kanban) and **detail level** (quick modal vs. full side panel with notes, viewings, and history).
 >
-> **Both views share identical transition rules** via a unified transition engine (§3.3.2):
-> - Forward moves execute immediately without prompts.
-> - Backward moves and moves from final stages require explicit confirmation.
+> **Both views follow the same transition rules** (§3.3.2):
+> - Forward moves go through without prompts.
+> - Backward moves and moves from final stages ask for confirmation.
 > - Protected stages (New, Initial Contact) cannot receive applications from later stages.
 
 ### 5.4 Tenant View
@@ -313,7 +313,7 @@ graph LR
 | **Purpose** | View and manage sent applications |
 | **Layout** | Flat list of application cards with status badges |
 | **Interactions** | Click card → Preview modal; Filter by status or listing; Cancel application from modal |
-| **No sub-views** | Tenant see a single flat list only (no CRM, no Analytics) |
+| **No sub-views** | Tenants see a single flat list only (no CRM, no Analytics) |
 
 ---
 
@@ -340,8 +340,8 @@ graph LR
 
 | Stage | Reversible? | Why |
 |-------|------------|-----|
-| **Contract Closing** (`contract`) | ⚠️ With confirmation | Represents a commitment; reversal is rare but sometimes necessary (e.g., contract fell through) |
-| **Rejected** (`rejected`) | ⚠️ With confirmation | Represents a deliberate decision; reopening signals a change of mind that requires explicit intent |
+| **Contract Closing** (`contract`) | ⚠️ With confirmation | Represents a commitment; reversal is uncommon but sometimes needed (e.g., contract fell through) |
+| **Rejected** (`rejected`) | ⚠️ With confirmation | Represents a deliberate decision; reopening requires the Owner to explicitly confirm |
 
 **Consequences:**
 - Cards in final stages **are draggable** in both views, but moving them always triggers a **confirmation dialog**.
@@ -352,8 +352,8 @@ graph LR
 
 | Transition | Result | Mechanism |
 |-----------|--------|-----------|
-| Any stage → New (`new`) | 🚫 Blocked | Drop is silently ignored |
-| Any stage (except New) → Initial Contact (`contact`) | 🚫 Blocked | Drop is silently ignored; dropdown resets |
+| Any stage → New (`new`) | 🚫 Blocked | Drop is ignored |
+| Any stage (except New) → Initial Contact (`contact`) | 🚫 Blocked | Drop is ignored; dropdown resets |
 | Contract Closing → Active stage (Viewings, Negotiation) | ⚠️ Confirmation | Confirmation dialog; Owner must explicitly approve |
 | Rejected → Active stage (Viewings, Negotiation, Contract) | ⚠️ Confirmation | Confirmation dialog; Owner must explicitly approve |
 | Contract Closing / Rejected → Protected stage (New, Contact) | 🚫 Blocked | Protected stage rule takes precedence over confirmation |
@@ -393,7 +393,7 @@ The following items were originally open questions. They have been resolved with
 | # | Question | Decision |
 |---|----------|----------|
 | 1 | **Should the CRM stage and List View status be linked?** | **Yes — they are now unified.** Both List View and CRM View use the same `stage` field with the same 6-stage pipeline. This eliminates confusion from having two independent classification systems. The difference between views is now purely presentational (vertical board vs. horizontal Kanban) and interactional (triage modal vs. full detail panel). |
-| 2 | **Can an Owner undo a Reject decision?** | **Yes — with explicit confirmation.** Both List View and CRM View allow moving applications out of "Rejected", but the unified transition engine requires the Owner to confirm this action via a dialog. This preserves flexibility while preventing accidental reversals. The Tenant can also re-apply independently (per §6.1). |
+| 2 | **Can an Owner undo a Reject decision?** | **Yes — with confirmation.** Both views allow moving applications out of "Rejected", but the Owner must confirm the action via a dialog. This keeps flexibility while preventing accidental changes. The Tenant can also re-apply on their own (per §6.1). |
 | 3 | **What happens after Accept?** | **Stage changes to `contract` (Contract Closing).** The Owner uses CRM tabs (Notes, Viewings) to coordinate next steps manually. Contract creation and automated follow-ups can be added as a separate module later. |
 | 4 | **Is there a notification system?** | **Yes — in-app notifications at minimum.** Tenants receive in-app notifications when their application status changes (Read, Accepted, Rejected). Push and email notifications can be added later. |
 | 5 | **What is the difference between Tenant "Sent" and "Unread"?** | **"Sent" is a brief transitional state.** `sent` = application submitted but not yet delivered/processed. `unread` = delivered to the Owner's dashboard but not yet opened. The `sent` → `unread` transition is near-instant (backend processing). |
@@ -423,17 +423,17 @@ When an application is in the "Rejected" stage, the Notes tab includes an additi
 ### 8.3 Viewing Status Badge
 
 For applications in the "Просмотры" (Viewings) stage, the CRM pipeline card displays a viewing status badge:
-- **Предстоит** (Upcoming) — blue badge — at least one viewing has `upcoming` status
-- **Проведен** (Done) — green badge — all viewings have `done` status
+- **Предстоит** (Upcoming) — at least one viewing has `upcoming` status
+- **Проведен** (Done) — all viewings have `done` status
 
 ### 8.4 Analytics View
 
-The **Analytics** tab provides data-driven insights across the pipeline:
+The **Analytics** tab shows key numbers and trends across the pipeline:
 
 | Component | Description |
 |-----------|-------------|
 | **Requests by Month** | Bar chart showing application volume over the last 6 months (Sep–Feb), with total count, current month count, and month-over-month change percentage |
 | **Conversion Funnel** | Vertical stepped funnel showing progression: Новые заявки → Первичный контакт → Просмотры → Переговоры → Контракт, with drop-off percentages between stages |
 | **Bottleneck Detection** | Identifies the stage transition with the highest loss percentage, along with the most common rejection reason |
-| **Recommendation** | AI-generated text recommendation based on the top rejection reason pattern |
+| **Recommendation** | System-generated suggestion based on the most common rejection reason |
 | **Object Filter** | Dropdown to filter all analytics data by specific listing |
